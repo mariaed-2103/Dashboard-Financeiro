@@ -1,0 +1,82 @@
+package com.finance_dashboard.ProjetoT1.model;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+@Document(collection = "transactions")
+public class Transaction {
+
+    @Id
+    private String id;
+
+    private String description;
+
+    private BigDecimal amount;
+
+    private TransactionType type;
+
+    private LocalDate date;
+
+    private Category category;
+
+
+    public Transaction() {
+    }
+
+    public Transaction(String description, BigDecimal amount,
+                       TransactionType type, Category category,
+                       LocalDate date) {
+        this.description = description;
+        this.amount = amount;
+        this.type = type;
+        this.category = category;
+        this.date = date;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public BigDecimal getAmount() {
+        return amount;
+    }
+
+    public TransactionType getType() {
+        return type;
+    }
+
+    public LocalDate getDate() {
+        return date;
+    }
+
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setAmount(BigDecimal amount) {
+        this.amount = amount;
+    }
+
+    public void setType(TransactionType type) {
+        this.type = type;
+    }
+
+    public void setDate(LocalDate date) {
+        this.date = date;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+}

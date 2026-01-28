@@ -1,0 +1,19 @@
+# IDE
+.idea/
+.vscode/
+
+# Node / Frontend
+node_modules/
+.next/
+dist/
+
+# Java / Spring
+target/
+*.log
+
+# Env
+.env
+.env.local
+
+# OS
+.DS_Store
