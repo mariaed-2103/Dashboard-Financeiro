@@ -25,6 +25,11 @@ public class Transaction {
 
     private String userEmail;
 
+    private Instant createdAt;
+
+    private Instant updatedAt;
+
+    private Instant deletedAt;
 
     public Transaction() {
     }
@@ -86,4 +91,28 @@ public class Transaction {
     }
 
     public void setUserEmail(String userEmail) {this.userEmail = userEmail;}
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Instant updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public Instant getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(Instant deletedAt) {
+        this.deletedAt = deletedAt;
+    }
 }

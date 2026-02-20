@@ -43,18 +43,24 @@ public class TransactionService {
                 dto.getAmount(),
                 dto.getType(),
                 dto.getCategory(),
-                Instant.parse(dto.getDate() + "T00:00:00Z")
+                dto.getDate()
+                        .atStartOfDay(ZoneOffset.UTC)
+                        .toInstant()
         );
 
+        Instant now = Instant.now();
+
         transaction.setUserEmail(userEmail);
+        transaction.setCreatedAt(now);
+        transaction.setUpdatedAt(now);
 
         return transactionRepository.save(transaction);
     }
 
-
     public List<Transaction> findAll() {
         String userEmail = AuthenticatedUser.getEmail();
-        return transactionRepository.findByUserEmail(userEmail);
+        return transactionRepository
+                .findByUserEmailAndDeletedAtIsNull(userEmail);
     }
 
 
@@ -62,7 +68,7 @@ public class TransactionService {
         String userEmail = AuthenticatedUser.getEmail();
 
         List<Transaction> transactions =
-                transactionRepository.findByUserEmail(userEmail);
+                transactionRepository.findByUserEmailAndDeletedAtIsNull(userEmail);
 
         BigDecimal totalIncome = BigDecimal.ZERO;
         BigDecimal totalExpense = BigDecimal.ZERO;
@@ -106,10 +112,25 @@ public class TransactionService {
 
         YearMonth yearMonth = YearMonth.of(year, month);
 
-        LocalDate start = yearMonth.atDay(1);
-        LocalDate end = yearMonth.atEndOfMonth();
+        Instant start = yearMonth
+                .atDay(1)
+                .atStartOfDay(ZoneOffset.UTC)
+                .toInstant();
 
-        return transactionRepository.findByDateBetween(start, end);
+        Instant end = yearMonth
+                .atEndOfMonth()
+                .atTime(23, 59, 59)
+                .atZone(ZoneOffset.UTC)
+                .toInstant();
+
+        String userEmail = AuthenticatedUser.getEmail();
+
+        return transactionRepository
+                .findByUserEmailAndDateBetweenAndDeletedAtIsNull(
+                        userEmail,
+                        start,
+                        end
+                );
     }
 
     public List<Transaction> findByCategory(Category category) {
@@ -118,7 +139,10 @@ public class TransactionService {
             throw new IllegalArgumentException("Categoria é obrigatória");
         }
 
-        return transactionRepository.findByCategory(category);
+        String userEmail = AuthenticatedUser.getEmail();
+
+        return transactionRepository
+                .findByUserEmailAndCategoryAndDeletedAtIsNull(userEmail, category);
     }
 
     public List<CategorySummaryDTO> getCategorySummary(int year, int month) {
@@ -128,24 +152,37 @@ public class TransactionService {
         }
 
         YearMonth yearMonth = YearMonth.of(year, month);
-        LocalDate start = yearMonth.atDay(1);
-        LocalDate end = yearMonth.atEndOfMonth();
+
+        Instant start = yearMonth
+                .atDay(1)
+                .atStartOfDay(ZoneOffset.UTC)
+                .toInstant();
+
+        Instant end = yearMonth
+                .atEndOfMonth()
+                .atTime(23, 59, 59)
+                .atZone(ZoneOffset.UTC)
+                .toInstant();
+
+        String userEmail = AuthenticatedUser.getEmail();
 
         List<Transaction> transactions =
-                transactionRepository.findByDateBetween(start, end);
+                transactionRepository
+                        .findByUserEmailAndDateBetweenAndDeletedAtIsNull(
+                                userEmail,
+                                start,
+                                end
+                        );
 
         Map<Category, BigDecimal[]> totals = new EnumMap<>(Category.class);
 
-        // inicializa todas as categorias
-        for (Category category : Category.values()) {
-            totals.put(category, new BigDecimal[]{
-                    BigDecimal.ZERO, // income
-                    BigDecimal.ZERO  // expense
-            });
-        }
-
-        // acumula corretamente
         for (Transaction transaction : transactions) {
+
+            totals.putIfAbsent(
+                    transaction.getCategory(),
+                    new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO}
+            );
+
             BigDecimal[] values = totals.get(transaction.getCategory());
 
             if (transaction.getType() == TransactionType.INCOME) {
@@ -155,17 +192,12 @@ public class TransactionService {
             }
         }
 
-        // monta o DTO
-        return totals.entrySet().stream()
-                // opcional: remover categorias zeradas
-                .filter(e ->
-                        e.getValue()[0].compareTo(BigDecimal.ZERO) > 0 ||
-                                e.getValue()[1].compareTo(BigDecimal.ZERO) > 0
-                )
+        return totals.entrySet()
+                .stream()
                 .map(e -> new CategorySummaryDTO(
                         e.getKey(),
-                        e.getValue()[0], // income
-                        e.getValue()[1]  // expense
+                        e.getValue()[0],
+                        e.getValue()[1]
                 ))
                 .toList();
     }
@@ -194,7 +226,7 @@ public class TransactionService {
         System.out.println("USER EMAIL: " + userEmail);
 
         List<Transaction> transactions =
-                transactionRepository.findByUserEmailAndDateBetween(
+                transactionRepository.findByUserEmailAndDateBetweenAndDeletedAtIsNull(
                         userEmail,
                         start,
                         end
@@ -229,6 +261,46 @@ public class TransactionService {
                         )
                 )
                 .toList();
+    }
+
+    public Transaction update(String id, TransactionRequestDTO dto) {
+
+        String userEmail = AuthenticatedUser.getEmail();
+
+        Transaction transaction = transactionRepository
+                .findByIdAndUserEmailAndDeletedAtIsNull(id, userEmail)
+                .orElseThrow(() ->
+                        new RuntimeException("Transação não encontrada")
+                );
+
+        validateTransaction(dto);
+
+        transaction.setDescription(dto.getDescription());
+        transaction.setAmount(dto.getAmount());
+        transaction.setType(dto.getType());
+        transaction.setCategory(dto.getCategory());
+        transaction.setDate(
+                Instant.parse(dto.getDate() + "T00:00:00Z")
+        );
+
+        transaction.setUpdatedAt(Instant.now());
+
+        return transactionRepository.save(transaction);
+    }
+
+    public void delete(String id) {
+
+        String userEmail = AuthenticatedUser.getEmail();
+
+        Transaction transaction = transactionRepository
+                .findByIdAndUserEmailAndDeletedAtIsNull(id, userEmail)
+                .orElseThrow(() ->
+                        new RuntimeException("Transação não encontrada")
+                );
+
+        transaction.setDeletedAt(Instant.now());
+
+        transactionRepository.save(transaction);
     }
 
 

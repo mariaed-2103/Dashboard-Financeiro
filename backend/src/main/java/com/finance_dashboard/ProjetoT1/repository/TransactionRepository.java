@@ -8,16 +8,24 @@ import org.springframework.stereotype.Repository;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface TransactionRepository extends MongoRepository<Transaction, String> {
-    List<Transaction> findByDateBetween(LocalDate start, LocalDate end);
 
-    List<Transaction> findByCategory(Category category);
+    List<Transaction> findByUserEmailAndCategoryAndDeletedAtIsNull(
+            String userEmail,
+            Category category
+    );
 
-    List<Transaction> findByUserEmail(String userEmail);
+    List<Transaction> findByUserEmailAndDeletedAtIsNull(String userEmail);
 
-    List<Transaction> findByUserEmailAndDateBetween(
+    Optional<Transaction> findByIdAndUserEmailAndDeletedAtIsNull(
+            String id,
+            String userEmail
+    );
+
+    List<Transaction> findByUserEmailAndDateBetweenAndDeletedAtIsNull(
             String userEmail,
             Instant start,
             Instant end
