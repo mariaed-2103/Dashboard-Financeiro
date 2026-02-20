@@ -66,18 +66,19 @@ public class TransactionController {
 
     }
 
+    // Atualiza transação
     @PutMapping("/{id}")
-    public ResponseEntity<Transaction> update(
+    public ResponseEntity<Transaction> updateTransaction(
             @PathVariable String id,
             @RequestBody TransactionRequestDTO dto
     ) {
-        return ResponseEntity.ok(
-                transactionService.update(id, dto)
-        );
+        Transaction updated = transactionService.update(id, dto);
+        return ResponseEntity.ok(updated);
     }
 
+    // Deleta transação
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
+    public ResponseEntity<Void> deleteTransaction(@PathVariable String id) {
         transactionService.delete(id);
         return ResponseEntity.noContent().build();
     }

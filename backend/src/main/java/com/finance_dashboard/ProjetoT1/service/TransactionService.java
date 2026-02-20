@@ -299,7 +299,7 @@ public class TransactionService {
                 );
 
         transaction.setDeletedAt(Instant.now());
-
+        transaction.setUpdatedAt(Instant.now());
         transactionRepository.save(transaction);
     }
 

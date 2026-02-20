@@ -1,6 +1,7 @@
 package com.finance_dashboard.ProjetoT1.model;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.math.BigDecimal;
@@ -8,6 +9,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 
 @Document(collection = "transactions")
+@CompoundIndex(name = "user_date_deleted_idx", def = "{'userEmail': 1, 'date': 1, 'deletedAt': 1}")
 public class Transaction {
 
     @Id
