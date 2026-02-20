@@ -44,3 +44,21 @@ export type Category =
     | "INVESTIMENTOS"
     | "OUTROS";
 
+export interface CategorySummary {
+    category: Category;
+    income: number;
+    expense: number;
+}
+
+export const CATEGORY_LABELS: Record<Category, string> = {
+    ALIMENTACAO: "Alimenta\u00e7\u00e3o",
+    TRANSPORTE: "Transporte",
+    MORADIA: "Moradia",
+    SAUDE: "Sa\u00fade",
+    EDUCACAO: "Educa\u00e7\u00e3o",
+    LAZER: "Lazer",
+    SALARIO: "Sal\u00e1rio",
+    INVESTIMENTOS: "Investimentos",
+    OUTROS: "Outros",
+}
+

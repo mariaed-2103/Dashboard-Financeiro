@@ -4,6 +4,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 
 @Document(collection = "transactions")
@@ -18,9 +19,11 @@ public class Transaction {
 
     private TransactionType type;
 
-    private LocalDate date;
+    private Instant date;
 
     private Category category;
+
+    private String userEmail;
 
 
     public Transaction() {
@@ -28,7 +31,7 @@ public class Transaction {
 
     public Transaction(String description, BigDecimal amount,
                        TransactionType type, Category category,
-                       LocalDate date) {
+                       Instant date) {
         this.description = description;
         this.amount = amount;
         this.type = type;
@@ -52,13 +55,15 @@ public class Transaction {
         return type;
     }
 
-    public LocalDate getDate() {
+    public Instant getDate() {
         return date;
     }
 
     public Category getCategory() {
         return category;
     }
+
+    public String getUserEmail() {return userEmail;}
 
     public void setDescription(String description) {
         this.description = description;
@@ -72,11 +77,13 @@ public class Transaction {
         this.type = type;
     }
 
-    public void setDate(LocalDate date) {
+    public void setDate(Instant date) {
         this.date = date;
     }
 
     public void setCategory(Category category) {
         this.category = category;
     }
+
+    public void setUserEmail(String userEmail) {this.userEmail = userEmail;}
 }

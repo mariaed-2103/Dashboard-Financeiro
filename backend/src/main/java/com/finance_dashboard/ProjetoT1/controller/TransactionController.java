@@ -1,7 +1,9 @@
 package com.finance_dashboard.ProjetoT1.controller;
 
+import com.finance_dashboard.ProjetoT1.dto.CategorySummaryDTO;
 import com.finance_dashboard.ProjetoT1.dto.SummaryResponseDTO;
 import com.finance_dashboard.ProjetoT1.dto.TransactionRequestDTO;
+import com.finance_dashboard.ProjetoT1.model.Category;
 import com.finance_dashboard.ProjetoT1.model.Transaction;
 import com.finance_dashboard.ProjetoT1.service.TransactionService;
 import org.springframework.http.HttpStatus;
@@ -42,6 +44,26 @@ public class TransactionController {
             @RequestParam int month
     ) {
         return ResponseEntity.ok(transactionService.findByMonth(year, month));
+    }
+
+    @GetMapping("/by-category")
+    public ResponseEntity<List<Transaction>> findByCategory(
+            @RequestParam Category category
+    ) {
+        return ResponseEntity.ok(
+                transactionService.findByCategory(category)
+        );
+    }
+
+    @GetMapping("/summary-by-category")
+    public ResponseEntity<List<CategorySummaryDTO>> getSummaryByCategory(
+            @RequestParam int year,
+            @RequestParam int month
+    ) {
+        return ResponseEntity.ok(
+                transactionService.getCategorySummaryByUser(year, month)
+        );
+
     }
 
 }
