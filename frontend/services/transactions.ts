@@ -46,3 +46,15 @@ export async function getCategorySummary(year: number, month: number) {
     return res.data;
 }
 
+export async function updateTransaction(
+    id: string,
+    data: TransactionFormData
+): Promise<Transaction> {
+    const response = await api.put(`/transactions/${id}`, data);
+    return response.data;
+}
+
+export async function deleteTransaction(id: string): Promise<void> {
+    await api.delete(`/transactions/${id}`);
+}
+
