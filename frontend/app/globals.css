@@ -90,8 +90,8 @@
 }
 
 @layer utilities {
-    .text-income { color: #55D9C1; } /* O verde do seu dashboard */
-    .text-expense { color: #ef4444; } /* O vermelho de erro/despesa */
+    .text-income { color: #55D9C1; }
+    .text-expense { color: #ef4444; }
     .bg-income { background-color: #55D9C1; }
     .bg-expense { background-color: #ef4444; }
 }

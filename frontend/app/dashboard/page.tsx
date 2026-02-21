@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { SummaryCards } from "@/components/dashboard/summary-cards";
@@ -141,21 +141,64 @@ export default function DashboardPage() {
         }
     };
 
-    const handleDeleteTransaction = async (id: string) => {
-        const confirm = window.confirm("Tem certeza que deseja excluir esta transação?");
-        if (!confirm) return;
+    const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const undoCancelledRef = useRef(false);
 
+    const handleDeleteTransaction = async (id: string) => {
+        const deletedTransaction = transactions.find((t) => t.id === id);
+        if (!deletedTransaction) return;
+
+        // Remove otimisticamente da lista
+        setTransactions((prev) => prev.filter((t) => t.id !== id));
+
+        // Limpa qualquer timer anterior
+        if (undoTimerRef.current) {
+            clearTimeout(undoTimerRef.current);
+        }
+        undoCancelledRef.current = false;
+
+        // Mostra toast com botão de desfazer por 6 segundos
+        toast("Transação excluída", {
+            description: deletedTransaction.description,
+            duration: 6000,
+            action: {
+                label: "Desfazer",
+                onClick: () => {
+                    undoCancelledRef.current = true;
+                    if (undoTimerRef.current) {
+                        clearTimeout(undoTimerRef.current);
+                    }
+                    // Restaura a transação na lista
+                    setTransactions((prev) => [...prev, deletedTransaction].sort(
+                        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+                    ));
+                    toast.success("Transação restaurada!");
+                },
+            },
+            onDismiss: () => {
+                // Se o toast foi dispensado sem desfazer, exclui imediatamente
+                if (!undoCancelledRef.current) {
+                    performDelete(id);
+                }
+            },
+        });
+
+        // Após 6 segundos, realiza a exclusão real se não foi cancelada
+        undoTimerRef.current = setTimeout(() => {
+            if (!undoCancelledRef.current) {
+                performDelete(id);
+            }
+        }, 6000);
+    };
+
+    const performDelete = async (id: string) => {
         try {
             await deleteTransaction(id);
-
-            setTransactions((prev) => prev.filter((t) => t.id !== id));
-
-            toast.success("Transação excluída com sucesso!");
-
-            loadDashboardData(); // atualiza gráficos e resumo
+            loadDashboardData();
         } catch (err) {
             const apiError = err as ApiError;
             toast.error(apiError.message || "Erro ao excluir transação");
+            loadDashboardData(); // recarrega para restaurar estado correto
         }
     };
 
