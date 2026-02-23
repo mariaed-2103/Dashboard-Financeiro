@@ -8,7 +8,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 public class UserService {
@@ -64,7 +70,6 @@ public class UserService {
         userRepository.save(user);
     }
 
-    // 🔥 Upload simples (versão local - depois você troca por Cloudinary)
     public UserResponseDTO uploadAvatar(MultipartFile file) {
 
         String email = AuthenticatedUser.getEmail();
@@ -84,16 +89,28 @@ public class UserService {
             throw new IllegalArgumentException("Imagem deve ter no máximo 2MB");
         }
 
-        // 🔴 Aqui você colocará Cloudinary depois
-        // Por enquanto simulamos URL
-        String fakeUrl = "https://fake-storage.com/" + file.getOriginalFilename();
+        try {
+            String uploadDir = "uploads/";
+            File dir = new File(uploadDir);
+            if (!dir.exists()) dir.mkdirs();
 
-        user.setProfileImageUrl(fakeUrl);
-        user.setUpdatedAt(LocalDateTime.now());
+            String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+            Path filePath = Paths.get(uploadDir + fileName);
 
-        userRepository.save(user);
+            Files.copy(file.getInputStream(), filePath);
 
-        return toDTO(user);
+            String imageUrl = "http://localhost:8080/uploads/" + fileName;
+
+            user.setProfileImageUrl(imageUrl);
+            user.setUpdatedAt(LocalDateTime.now());
+
+            userRepository.save(user);
+
+            return toDTO(user);
+
+        } catch (IOException e) {
+            throw new RuntimeException("Erro ao salvar imagem");
+        }
     }
 
     private UserResponseDTO toDTO(User user) {

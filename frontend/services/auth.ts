@@ -24,7 +24,7 @@ export async function loginUser(data: LoginRequest): Promise<AuthResponse> {
 
     if (!res.ok) {
         const errorText = await res.text()
-        throw new Error(errorText || "Credenciais inválidas")
+        throw new Error(errorText || "Credenciais inv\u00e1lidas")
     }
 
     return res.json()

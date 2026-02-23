@@ -44,7 +44,7 @@ import {
 
 import { Toaster, toast } from "sonner";
 import { getToken, removeToken } from "@/services/auth";
-import { LogOut } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 
 const CATEGORIES: { value: Category; label: string }[] = (
     Object.entries(CATEGORY_LABELS) as [Category, string][]
@@ -126,16 +126,16 @@ export default function DashboardPage() {
         try {
             if (id) {
                 await updateTransaction(id, data);
-                toast.success("Transação atualizada com sucesso!");
+                toast.success("Transa\u00e7\u00e3o atualizada com sucesso!");
             } else {
                 await createTransaction(data);
-                toast.success("Transação criada com sucesso!");
+                toast.success("Transa\u00e7\u00e3o criada com sucesso!");
             }
             setEditingTransaction(null);
             loadDashboardData();
         } catch (err) {
             const apiError = err as ApiError;
-            toast.error(apiError.message || "Erro ao salvar transação");
+            toast.error(apiError.message || "Erro ao salvar transa\u00e7\u00e3o");
         } finally {
             setIsSubmitting(false);
         }
@@ -148,17 +148,14 @@ export default function DashboardPage() {
         const deletedTransaction = transactions.find((t) => t.id === id);
         if (!deletedTransaction) return;
 
-        // Remove otimisticamente da lista
         setTransactions((prev) => prev.filter((t) => t.id !== id));
 
-        // Limpa qualquer timer anterior
         if (undoTimerRef.current) {
             clearTimeout(undoTimerRef.current);
         }
         undoCancelledRef.current = false;
 
-        // Mostra toast com botão de desfazer por 6 segundos
-        toast("Transação excluída", {
+        toast("Transa\u00e7\u00e3o exclu\u00edda", {
             description: deletedTransaction.description,
             duration: 6000,
             action: {
@@ -168,22 +165,19 @@ export default function DashboardPage() {
                     if (undoTimerRef.current) {
                         clearTimeout(undoTimerRef.current);
                     }
-                    // Restaura a transação na lista
                     setTransactions((prev) => [...prev, deletedTransaction].sort(
                         (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
                     ));
-                    toast.success("Transação restaurada!");
+                    toast.success("Transa\u00e7\u00e3o restaurada!");
                 },
             },
             onDismiss: () => {
-                // Se o toast foi dispensado sem desfazer, exclui imediatamente
                 if (!undoCancelledRef.current) {
                     performDelete(id);
                 }
             },
         });
 
-        // Após 6 segundos, realiza a exclusão real se não foi cancelada
         undoTimerRef.current = setTimeout(() => {
             if (!undoCancelledRef.current) {
                 performDelete(id);
@@ -197,8 +191,8 @@ export default function DashboardPage() {
             loadDashboardData();
         } catch (err) {
             const apiError = err as ApiError;
-            toast.error(apiError.message || "Erro ao excluir transação");
-            loadDashboardData(); // recarrega para restaurar estado correto
+            toast.error(apiError.message || "Erro ao excluir transa\u00e7\u00e3o");
+            loadDashboardData();
         }
     };
 
@@ -219,13 +213,23 @@ export default function DashboardPage() {
                     </div>
                     <div>
                         <h1 className="text-lg font-bold text-foreground">Clarus</h1>
-                        <p className="text-xs text-muted-foreground">Dados claros, decisões melhores</p>
+                        <p className="text-xs text-muted-foreground">Dados claros, decis&otilde;es melhores</p>
                     </div>
                 </div>
-                <Button variant="ghost" onClick={handleLogout} className="gap-2 text-muted-foreground hover:text-foreground hover:bg-muted">
-                    <LogOut className="size-4" />
-                    Sair
-                </Button>
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="ghost"
+                        onClick={() => router.push("/profile")}
+                        className="gap-2 text-muted-foreground hover:text-foreground hover:bg-muted"
+                    >
+                        <User className="size-4" />
+                        Perfil
+                    </Button>
+                    <Button variant="ghost" onClick={handleLogout} className="gap-2 text-muted-foreground hover:text-foreground hover:bg-muted">
+                        <LogOut className="size-4" />
+                        Sair
+                    </Button>
+                </div>
             </header>
 
             <main className="flex-1 container mx-auto px-4 py-8 flex flex-col gap-6">
@@ -264,13 +268,13 @@ export default function DashboardPage() {
                     isLoading={isLoading}
                     error={error}
                     onEdit={(t) => setEditingTransaction(t)}
-                    onDelete={handleDeleteTransaction} // <-- adicionado
+                    onDelete={handleDeleteTransaction}
                 />
             </main>
 
             <footer className="border-t border-border/50 bg-card mt-auto">
                 <div className="container mx-auto px-4 py-4 text-center text-sm text-muted-foreground">
-                    Clarus &copy; 2026 — Dados claros, decisões melhores
+                    Clarus &copy; 2026 &mdash; Dados claros, decis&otilde;es melhores
                 </div>
             </footer>
         </div>
