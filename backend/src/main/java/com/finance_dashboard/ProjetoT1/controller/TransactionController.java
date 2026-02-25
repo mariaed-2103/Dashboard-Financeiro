@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
 import java.util.List;
 
 @RestController
@@ -81,6 +82,48 @@ public class TransactionController {
     public ResponseEntity<Void> deleteTransaction(@PathVariable String id) {
         transactionService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/by-period")
+    public ResponseEntity<List<Transaction>> findByPeriod(
+            @RequestParam String start,
+            @RequestParam String end
+    ) {
+        Instant startInstant = Instant.parse(start);
+        Instant endInstant = Instant.parse(end);
+
+        return ResponseEntity.ok(
+                transactionService.findByDateRange(startInstant, endInstant)
+        );
+    }
+
+    @GetMapping("/summary-by-period")
+    public ResponseEntity<SummaryResponseDTO> getSummaryByPeriod(
+            @RequestParam String start,
+            @RequestParam String end
+    ) {
+        Instant startInstant = Instant.parse(start);
+        Instant endInstant = Instant.parse(end);
+
+        return ResponseEntity.ok(
+                transactionService.getSummaryByDateRange(startInstant, endInstant)
+        );
+    }
+
+    @GetMapping("/category-summary-by-period")
+    public ResponseEntity<List<CategorySummaryDTO>> getCategorySummaryByPeriod(
+            @RequestParam String start,
+            @RequestParam String end
+    ) {
+        Instant startInstant = Instant.parse(start);
+        Instant endInstant = Instant.parse(end);
+
+        return ResponseEntity.ok(
+                transactionService.getCategorySummaryByDateRange(
+                        startInstant,
+                        endInstant
+                )
+        );
     }
 
 }

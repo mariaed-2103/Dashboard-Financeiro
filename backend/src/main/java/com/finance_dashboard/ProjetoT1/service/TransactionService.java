@@ -303,5 +303,82 @@ public class TransactionService {
         transactionRepository.save(transaction);
     }
 
+    public List<Transaction> findByDateRange(Instant start, Instant end) {
+
+        if (start == null || end == null) {
+            throw new IllegalArgumentException("Intervalo inválido");
+        }
+
+        if (start.isAfter(end)) {
+            throw new IllegalArgumentException("Data inicial maior que final");
+        }
+
+        String userEmail = AuthenticatedUser.getEmail();
+
+        return transactionRepository
+                .findByUserEmailAndDateBetweenAndDeletedAtIsNull(
+                        userEmail,
+                        start,
+                        end
+                );
+    }
+
+    public SummaryResponseDTO getSummaryByDateRange(Instant start, Instant end) {
+
+        List<Transaction> transactions = findByDateRange(start, end);
+
+        BigDecimal totalIncome = BigDecimal.ZERO;
+        BigDecimal totalExpense = BigDecimal.ZERO;
+
+        for (Transaction t : transactions) {
+            if (t.getType() == TransactionType.INCOME) {
+                totalIncome = totalIncome.add(t.getAmount());
+            } else {
+                totalExpense = totalExpense.add(t.getAmount());
+            }
+        }
+
+        BigDecimal balance = totalIncome.subtract(totalExpense);
+
+        return new SummaryResponseDTO(totalIncome, totalExpense, balance);
+    }
+
+    public List<CategorySummaryDTO> getCategorySummaryByDateRange(
+            Instant start,
+            Instant end
+    ) {
+
+        List<Transaction> transactions = findByDateRange(start, end);
+
+        Map<Category, BigDecimal[]> totals = new EnumMap<>(Category.class);
+
+        for (Transaction t : transactions) {
+
+            totals.putIfAbsent(
+                    t.getCategory(),
+                    new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO}
+            );
+
+            BigDecimal[] values = totals.get(t.getCategory());
+
+            if (t.getType() == TransactionType.INCOME) {
+                values[0] = values[0].add(t.getAmount());
+            } else {
+                values[1] = values[1].add(t.getAmount());
+            }
+        }
+
+        return totals.entrySet()
+                .stream()
+                .map(e ->
+                        new CategorySummaryDTO(
+                                e.getKey(),
+                                e.getValue()[0],
+                                e.getValue()[1]
+                        )
+                )
+                .toList();
+    }
+
 
 }
