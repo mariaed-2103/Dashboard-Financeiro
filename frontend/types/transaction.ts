@@ -23,11 +23,6 @@ export interface TransactionFormData {
     date: string;
 }
 
-export interface MonthlyTransactionsParams {
-    year: number;
-    month: number;
-}
-
 export interface ApiError {
     message: string;
     statusCode: number;

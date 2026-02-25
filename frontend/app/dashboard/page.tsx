@@ -17,7 +17,7 @@ import {
     getCategorySummary,
     createTransaction,
     updateTransaction,
-    deleteTransaction
+    deleteTransaction, getTransactionsByPeriod, getTransactionSummaryByPeriod, getCategorySummaryByPeriod
 } from "@/services/transactions";
 
 import Image from "next/image";
@@ -62,6 +62,9 @@ export default function DashboardPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+    const [periodFilter, setPeriodFilter] = useState<"7" | "15" | "30" | "custom" | "">("");
+    const [startDate, setStartDate] = useState<string | null>(null);
+    const [endDate, setEndDate] = useState<string | null>(null);
 
     useEffect(() => {
         if (!getToken()) {
@@ -71,51 +74,140 @@ export default function DashboardPage() {
         }
     }, [router]);
 
+    function buildPeriodDates(type: "7" | "15" | "30") {
+        const end = new Date();
+        const start = new Date();
+
+        start.setDate(end.getDate() - Number(type));
+
+        return {
+            start: start.toISOString(),
+            end: end.toISOString(),
+        };
+    }
+
     const loadDashboardData = useCallback(async () => {
         setIsLoading(true);
         setError(null);
 
         try {
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = now.getMonth() + 1;
+            let tx: Transaction[] = [];
+            let sum: TransactionSummary | null = null;
+            let catSum: CategorySummary[] = [];
 
-            if (!selectedCategory) {
-                const [tx, sum, catSum] = await Promise.all([
-                    getTransactions(),
-                    getTransactionSummary(),
-                    getCategorySummary(year, month),
-                ]);
-                setTransactions(tx);
-                setSummary(sum);
-                setCategorySummary(catSum);
-            } else {
-                const tx = await getTransactionsByCategory(selectedCategory);
-                setTransactions(tx);
+            // 🔥 CASO 1 — Existe filtro de período
+            if (periodFilter) {
+                let start: string;
+                let end: string;
 
-                const totalIncome = tx
-                    .filter((t: Transaction) => t.type === "INCOME")
-                    .reduce((acc: number, t: Transaction) => acc + t.amount, 0);
+                if (periodFilter === "custom") {
+                    if (!startDate || !endDate) {
+                        setIsLoading(false);
+                        return;
+                    }
 
-                const totalExpense = tx
-                    .filter((t: Transaction) => t.type === "EXPENSE")
-                    .reduce((acc: number, t: Transaction) => acc + t.amount, 0);
+                    start = new Date(startDate + "T00:00:00Z").toISOString();
+                    end = new Date(endDate + "T23:59:59Z").toISOString();
+                } else {
+                    const dates = buildPeriodDates(periodFilter);
+                    start = dates.start;
+                    end = dates.end;
+                }
 
-                setSummary({ totalIncome, totalExpense, balance: totalIncome - totalExpense });
-                setCategorySummary([{ category: selectedCategory, income: totalIncome, expense: totalExpense }]);
+                if (!selectedCategory) {
+                    [tx, sum, catSum] = await Promise.all([
+                        getTransactionsByPeriod(start, end),
+                        getTransactionSummaryByPeriod(start, end),
+                        getCategorySummaryByPeriod(start, end),
+                    ]);
+                } else {
+                    tx = await getTransactionsByPeriod(start, end);
+                    tx = tx.filter(t => t.category === selectedCategory);
+
+                    const totalIncome = tx
+                        .filter(t => t.type === "INCOME")
+                        .reduce((acc, t) => acc + t.amount, 0);
+
+                    const totalExpense = tx
+                        .filter(t => t.type === "EXPENSE")
+                        .reduce((acc, t) => acc + t.amount, 0);
+
+                    sum = {
+                        totalIncome,
+                        totalExpense,
+                        balance: totalIncome - totalExpense,
+                    };
+
+                    catSum = [{
+                        category: selectedCategory,
+                        income: totalIncome,
+                        expense: totalExpense,
+                    }];
+                }
             }
+
+            // 🔥 CASO 2 — Sem filtro de período (comportamento atual)
+            else {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = now.getMonth() + 1;
+
+                if (!selectedCategory) {
+                    [tx, sum, catSum] = await Promise.all([
+                        getTransactions(),
+                        getTransactionSummary(),
+                        getCategorySummary(year, month),
+                    ]);
+                } else {
+                    tx = await getTransactionsByCategory(selectedCategory);
+
+                    const totalIncome = tx
+                        .filter(t => t.type === "INCOME")
+                        .reduce((acc, t) => acc + t.amount, 0);
+
+                    const totalExpense = tx
+                        .filter(t => t.type === "EXPENSE")
+                        .reduce((acc, t) => acc + t.amount, 0);
+
+                    sum = {
+                        totalIncome,
+                        totalExpense,
+                        balance: totalIncome - totalExpense,
+                    };
+
+                    catSum = [{
+                        category: selectedCategory,
+                        income: totalIncome,
+                        expense: totalExpense,
+                    }];
+                }
+            }
+
+            setTransactions(tx);
+            setSummary(sum);
+            setCategorySummary(catSum);
+
         } catch (err) {
             const apiError = err as ApiError;
+
             if ((apiError as any)?.status === 401) {
                 removeToken();
                 router.replace("/login");
                 return;
             }
+
             setError(apiError.message || "Erro ao carregar dados");
         } finally {
             setIsLoading(false);
         }
-    }, [selectedCategory, router]);
+    }, [selectedCategory, periodFilter, startDate, endDate, router]);
+
+    useEffect(() => {
+        if (periodFilter !== "custom") {
+            setStartDate(null);
+            setEndDate(null);
+        }
+    }, [periodFilter]);
 
     useEffect(() => {
         if (!isCheckingAuth) loadDashboardData();
@@ -248,6 +340,46 @@ export default function DashboardPage() {
                     {selectedCategory && (
                         <Button variant="outline" onClick={() => setSelectedCategory("")} className="border-border/50 text-muted-foreground hover:text-foreground">
                             Limpar filtro
+                        </Button>
+                    )}
+                    <Select
+                        value={periodFilter}
+                        onValueChange={(value) => setPeriodFilter(value as any)}
+                    >
+                        <SelectTrigger className="w-[220px]">
+                            <SelectValue placeholder="Filtrar por período" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="7">Últimos 7 dias</SelectItem>
+                            <SelectItem value="15">Últimos 15 dias</SelectItem>
+                            <SelectItem value="30">Últimos 30 dias</SelectItem>
+                            <SelectItem value="custom">Personalizado</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    {periodFilter === "custom" && (
+                        <div className="flex gap-2">
+                            <input
+                                type="date"
+                                onChange={(e) => setStartDate(e.target.value)}
+                                className="border rounded px-2 py-1"
+                            />
+                            <input
+                                type="date"
+                                onChange={(e) => setEndDate(e.target.value)}
+                                className="border rounded px-2 py-1"
+                            />
+                        </div>
+                    )}
+                    {periodFilter && (
+                        <Button
+                            variant="outline"
+                            onClick={() => {
+                                setPeriodFilter("");
+                                setStartDate(null);
+                                setEndDate(null);
+                            }}
+                        >
+                            Limpar período
                         </Button>
                     )}
                 </div>

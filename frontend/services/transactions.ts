@@ -91,3 +91,39 @@ async function parseError(res: Response) {
     error.statusCode = res.status
     return error
 }
+
+export async function getTransactionsByPeriod(
+    start: string,
+    end: string
+): Promise<Transaction[]> {
+    const res = await fetch(
+        `${API_BASE_URL}/transactions/by-period?start=${start}&end=${end}`,
+        { headers: getAuthHeaders() }
+    );
+    if (!res.ok) throw await parseError(res);
+    return res.json();
+}
+
+export async function getTransactionSummaryByPeriod(
+    start: string,
+    end: string
+): Promise<TransactionSummary> {
+    const res = await fetch(
+        `${API_BASE_URL}/transactions/summary-by-period?start=${start}&end=${end}`,
+        { headers: getAuthHeaders() }
+    );
+    if (!res.ok) throw await parseError(res);
+    return res.json();
+}
+
+export async function getCategorySummaryByPeriod(
+    start: string,
+    end: string
+): Promise<CategorySummary[]> {
+    const res = await fetch(
+        `${API_BASE_URL}/transactions/category-summary-by-period?start=${start}&end=${end}`,
+        { headers: getAuthHeaders() }
+    );
+    if (!res.ok) throw await parseError(res);
+    return res.json();
+}
