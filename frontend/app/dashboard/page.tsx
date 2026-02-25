@@ -274,7 +274,7 @@ export default function DashboardPage() {
 
             <footer className="border-t border-border/50 bg-card mt-auto">
                 <div className="container mx-auto px-4 py-4 text-center text-sm text-muted-foreground">
-                    Clarus &copy; 2026 &mdash; Dados claros, decis&otilde;es melhores
+                    Clarus &copy; 2026 &mdash; Dados claros, decisões melhores
                 </div>
             </footer>
         </div>

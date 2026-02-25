@@ -81,12 +81,12 @@ public class UserService {
             throw new IllegalArgumentException("Arquivo vazio");
         }
 
-        if (!file.getContentType().startsWith("image/")) {
+        if (file.getContentType() == null || !file.getContentType().startsWith("image/")) {
             throw new IllegalArgumentException("Arquivo deve ser uma imagem");
         }
 
-        if (file.getSize() > 2 * 1024 * 1024) {
-            throw new IllegalArgumentException("Imagem deve ter no máximo 2MB");
+        if (file.getSize() > 5 * 1024 * 1024) {
+            throw new IllegalArgumentException("Imagem deve ter no máximo 5MB");
         }
 
         try {
@@ -94,10 +94,21 @@ public class UserService {
             File dir = new File(uploadDir);
             if (!dir.exists()) dir.mkdirs();
 
-            String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-            Path filePath = Paths.get(uploadDir + fileName);
+            // Deletar imagem antiga se existir
+            if (user.getProfileImageUrl() != null) {
+                String oldFileName = user.getProfileImageUrl()
+                        .substring(user.getProfileImageUrl().lastIndexOf("/") + 1);
 
-            Files.copy(file.getInputStream(), filePath);
+                Path oldFilePath = Paths.get(uploadDir + oldFileName);
+                Files.deleteIfExists(oldFilePath);
+            }
+
+            // Criar novo nome único
+            String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+            Path filePath = Paths.get(uploadDir, fileName);
+
+            // Permitir sobrescrita explícita
+            Files.copy(file.getInputStream(), filePath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
 
             String imageUrl = "http://localhost:8080/uploads/" + fileName;
 
@@ -109,6 +120,7 @@ public class UserService {
             return toDTO(user);
 
         } catch (IOException e) {
+            e.printStackTrace(); // importante pra debug real
             throw new RuntimeException("Erro ao salvar imagem");
         }
     }

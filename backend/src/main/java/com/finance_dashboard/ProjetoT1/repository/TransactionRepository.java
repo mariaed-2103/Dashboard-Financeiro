@@ -31,4 +31,10 @@ public interface TransactionRepository extends MongoRepository<Transaction, Stri
             Instant end
     );
 
+    List<Transaction> findByUserEmailAndDateBetween(
+            String email,
+            LocalDate start,
+            LocalDate end
+    );
+
 }
