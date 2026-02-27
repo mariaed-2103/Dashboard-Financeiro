@@ -41,10 +41,15 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 import { Toaster, toast } from "sonner";
 import { getToken, removeToken } from "@/services/auth";
-import { LogOut, User } from "lucide-react";
+import { LogOut, User, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 const CATEGORIES: { value: Category; label: string }[] = (
     Object.entries(CATEGORY_LABELS) as [Category, string][]
@@ -357,17 +362,69 @@ export default function DashboardPage() {
                         </SelectContent>
                     </Select>
                     {periodFilter === "custom" && (
-                        <div className="flex gap-2">
-                            <input
-                                type="date"
-                                onChange={(e) => setStartDate(e.target.value)}
-                                className="border rounded px-2 py-1"
-                            />
-                            <input
-                                type="date"
-                                onChange={(e) => setEndDate(e.target.value)}
-                                className="border rounded px-2 py-1"
-                            />
+                        <div className="flex items-center gap-2">
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        className={cn(
+                                            "w-[160px] justify-start text-left font-normal border-border/50",
+                                            !startDate && "text-muted-foreground"
+                                        )}
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {startDate ? format(new Date(startDate + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR }) : "Data inicial"}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0 border-border/50 bg-card rounded-xl shadow-lg" align="start">
+                                    <Calendar
+                                        mode="single"
+                                        selected={startDate ? new Date(startDate + "T12:00:00") : undefined}
+                                        onSelect={(day) => setStartDate(day ? format(day, "yyyy-MM-dd") : null)}
+                                        locale={ptBR}
+                                        disabled={{ after: endDate ? new Date(endDate + "T12:00:00") : new Date() }}
+                                        className="p-3"
+                                        classNames={{
+                                            month_caption: "flex items-center justify-center h-8 font-semibold text-sm text-foreground capitalize",
+                                            weekday: "text-muted-foreground text-xs font-medium w-9",
+                                            today: "bg-accent text-accent-foreground rounded-lg font-semibold",
+                                        }}
+                                    />
+                                </PopoverContent>
+                            </Popover>
+                            <span className="text-muted-foreground text-sm">a</span>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        className={cn(
+                                            "w-[160px] justify-start text-left font-normal border-border/50",
+                                            !endDate && "text-muted-foreground"
+                                        )}
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {endDate ? format(new Date(endDate + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR }) : "Data final"}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0 border-border/50 bg-card rounded-xl shadow-lg" align="start">
+                                    <Calendar
+                                        mode="single"
+                                        selected={endDate ? new Date(endDate + "T12:00:00") : undefined}
+                                        onSelect={(day) => setEndDate(day ? format(day, "yyyy-MM-dd") : null)}
+                                        locale={ptBR}
+                                        disabled={{
+                                            before: startDate ? new Date(startDate + "T12:00:00") : undefined,
+                                            after: new Date(),
+                                        }}
+                                        className="p-3"
+                                        classNames={{
+                                            month_caption: "flex items-center justify-center h-8 font-semibold text-sm text-foreground capitalize",
+                                            weekday: "text-muted-foreground text-xs font-medium w-9",
+                                            today: "bg-accent text-accent-foreground rounded-lg font-semibold",
+                                        }}
+                                    />
+                                </PopoverContent>
+                            </Popover>
                         </div>
                     )}
                     {periodFilter && (
