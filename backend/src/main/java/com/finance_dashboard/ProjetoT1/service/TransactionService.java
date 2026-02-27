@@ -7,18 +7,14 @@ import com.finance_dashboard.ProjetoT1.dto.TransactionRequestDTO;
 import com.finance_dashboard.ProjetoT1.model.Category;
 import com.finance_dashboard.ProjetoT1.model.Transaction;
 import com.finance_dashboard.ProjetoT1.model.TransactionType;
+import com.finance_dashboard.ProjetoT1.repository.CategoryRepository;
 import com.finance_dashboard.ProjetoT1.repository.TransactionRepository;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneOffset;
-import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,9 +23,14 @@ import java.util.Map;
 public class TransactionService {
 
     private final TransactionRepository transactionRepository;
+    private final CategoryRepository categoryRepository;
 
-    public TransactionService(TransactionRepository transactionRepository) {
+    public TransactionService(
+            TransactionRepository transactionRepository,
+            CategoryRepository categoryRepository
+    ) {
         this.transactionRepository = transactionRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     public Transaction create(TransactionRequestDTO dto) {
@@ -38,11 +39,17 @@ public class TransactionService {
 
         String userEmail = AuthenticatedUser.getEmail();
 
+        Category category = categoryRepository
+                .findByIdAndUserEmailAndActiveTrue(dto.getCategoryId(), userEmail)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Categoria não encontrada")
+                );
+
         Transaction transaction = new Transaction(
                 dto.getDescription(),
                 dto.getAmount(),
                 dto.getType(),
-                dto.getCategory(),
+                dto.getCategoryId(),
                 dto.getDate()
                         .atStartOfDay(ZoneOffset.UTC)
                         .toInstant()
@@ -133,16 +140,16 @@ public class TransactionService {
                 );
     }
 
-    public List<Transaction> findByCategory(Category category) {
+    public List<Transaction> findByCategory(String categoryId) {
 
-        if (category == null) {
+        if (categoryId == null) {
             throw new IllegalArgumentException("Categoria é obrigatória");
         }
 
         String userEmail = AuthenticatedUser.getEmail();
 
         return transactionRepository
-                .findByUserEmailAndCategoryAndDeletedAtIsNull(userEmail, category);
+                .findByUserEmailAndCategoryIdAndDeletedAtIsNull(userEmail, categoryId);
     }
 
     public List<CategorySummaryDTO> getCategorySummary(int year, int month) {
@@ -174,16 +181,16 @@ public class TransactionService {
                                 end
                         );
 
-        Map<Category, BigDecimal[]> totals = new EnumMap<>(Category.class);
+        Map<String, BigDecimal[]> totals = new HashMap<>();
 
         for (Transaction transaction : transactions) {
 
             totals.putIfAbsent(
-                    transaction.getCategory(),
+                    transaction.getCategoryId(),
                     new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO}
             );
 
-            BigDecimal[] values = totals.get(transaction.getCategory());
+            BigDecimal[] values = totals.get(transaction.getCategoryId());
 
             if (transaction.getType() == TransactionType.INCOME) {
                 values[0] = values[0].add(transaction.getAmount());
@@ -234,15 +241,16 @@ public class TransactionService {
 
         System.out.println("TRANSACTIONS FOUND: " + transactions.size());
 
-        Map<Category, BigDecimal[]> totals = new EnumMap<>(Category.class);
+        Map<String, BigDecimal[]> totals = new HashMap<>();
 
         for (Transaction t : transactions) {
+
             totals.putIfAbsent(
-                    t.getCategory(),
-                    new BigDecimal[]{ BigDecimal.ZERO, BigDecimal.ZERO }
+                    t.getCategoryId(),
+                    new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO}
             );
 
-            BigDecimal[] values = totals.get(t.getCategory());
+            BigDecimal[] values = totals.get(t.getCategoryId());
 
             if (t.getType() == TransactionType.INCOME) {
                 values[0] = values[0].add(t.getAmount());
@@ -278,7 +286,7 @@ public class TransactionService {
         transaction.setDescription(dto.getDescription());
         transaction.setAmount(dto.getAmount());
         transaction.setType(dto.getType());
-        transaction.setCategory(dto.getCategory());
+        transaction.setCategoryId(dto.getCategoryId());
         transaction.setDate(
                 Instant.parse(dto.getDate() + "T00:00:00Z")
         );
@@ -350,16 +358,16 @@ public class TransactionService {
 
         List<Transaction> transactions = findByDateRange(start, end);
 
-        Map<Category, BigDecimal[]> totals = new EnumMap<>(Category.class);
+        Map<String, BigDecimal[]> totals = new HashMap<>();
 
         for (Transaction t : transactions) {
 
             totals.putIfAbsent(
-                    t.getCategory(),
+                    t.getCategoryId(),
                     new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO}
             );
 
-            BigDecimal[] values = totals.get(t.getCategory());
+            BigDecimal[] values = totals.get(t.getCategoryId());
 
             if (t.getType() == TransactionType.INCOME) {
                 values[0] = values[0].add(t.getAmount());

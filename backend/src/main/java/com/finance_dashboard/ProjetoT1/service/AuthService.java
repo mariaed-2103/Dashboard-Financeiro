@@ -13,18 +13,22 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final CategoryService categoryService;
 
     public AuthService(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
-            JwtService jwtService
+            JwtService jwtService,
+            CategoryService categoryService
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.categoryService = categoryService;
     }
 
     public void register(RegisterRequestDTO dto) {
+
         if (userRepository.existsByEmail(dto.email())) {
             throw new IllegalArgumentException("Email já cadastrado");
         }
@@ -36,6 +40,8 @@ public class AuthService {
         );
 
         userRepository.save(user);
+
+        categoryService.createDefaultCategories(user.getEmail());
     }
 
     public AuthResponseDTO login(LoginRequestDTO dto) {
