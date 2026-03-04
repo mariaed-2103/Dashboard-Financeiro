@@ -5,7 +5,7 @@ export interface Transaction {
     description: string;
     amount: number;
     type: TransactionType;
-    category: Category;
+    categoryId: string; // pode ser global ou custom
     date: string;
 }
 
@@ -19,7 +19,7 @@ export interface TransactionFormData {
     description: string;
     amount: number;
     type: TransactionType;
-    category: Category;
+    categoryId: string // pode ser global ou custom
     date: string;
 }
 
@@ -28,6 +28,7 @@ export interface ApiError {
     statusCode: number;
 }
 
+// Categorias globais fixas
 export type Category =
     | "ALIMENTACAO"
     | "TRANSPORTE"
@@ -39,21 +40,37 @@ export type Category =
     | "INVESTIMENTOS"
     | "OUTROS";
 
-export interface CategorySummary {
-    category: Category;
-    income: number;
-    expense: number;
+// Representa uma categoria custom criada pelo usuário
+export interface UserCategory {
+    id: string;
+    userId: string;
+    name: string;
+    createdAt: string;
 }
 
+export type CategorySummary =
+    | {
+    type: "global"
+    category: Category
+    income: number
+    expense: number
+}
+    | {
+    type: "custom"
+    category: string
+    income: number
+    expense: number
+}
+
+// Labels das categorias globais
 export const CATEGORY_LABELS: Record<Category, string> = {
-    ALIMENTACAO: "Alimenta\u00e7\u00e3o",
+    ALIMENTACAO: "Alimentação",
     TRANSPORTE: "Transporte",
     MORADIA: "Moradia",
-    SAUDE: "Sa\u00fade",
-    EDUCACAO: "Educa\u00e7\u00e3o",
+    SAUDE: "Saúde",
+    EDUCACAO: "Educação",
     LAZER: "Lazer",
-    SALARIO: "Sal\u00e1rio",
+    SALARIO: "Salário",
     INVESTIMENTOS: "Investimentos",
     OUTROS: "Outros",
-}
-
+};

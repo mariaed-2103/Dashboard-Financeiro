@@ -9,6 +9,7 @@ import { TransactionForm } from "@/components/dashboard/transaction-form";
 import { CategoryPieChart } from "@/components/dashboard/category-pie-chart";
 import { CategoryBarChart } from "@/components/dashboard/category-bar-chart";
 import { CategorySummaryList } from "@/components/dashboard/category-summary";
+import { CategoryManager } from "@/components/dashboard/category-manager";
 
 import {
     getTransactions,
@@ -17,17 +18,21 @@ import {
     getCategorySummary,
     createTransaction,
     updateTransaction,
-    deleteTransaction, getTransactionsByPeriod, getTransactionSummaryByPeriod, getCategorySummaryByPeriod
+    deleteTransaction,
+    getTransactionsByPeriod,
+    getTransactionSummaryByPeriod,
+    getCategorySummaryByPeriod,
 } from "@/services/transactions";
 
-import Image from "next/image";
+import { getCategories } from "@/services/categories";
 
 import type {
     Transaction,
     TransactionSummary,
     TransactionFormData,
     Category,
-    CategorySummary,
+    CategorySummary as CategorySummaryType,
+    UserCategory,
     ApiError,
 } from "@/types/transaction";
 
@@ -43,13 +48,20 @@ import {
 } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+    Dialog,
+    DialogContent,
+    DialogTrigger,
+} from "@/components/ui/dialog";
 
 import { Toaster, toast } from "sonner";
 import { getToken, removeToken } from "@/services/auth";
-import { LogOut, User, CalendarIcon } from "lucide-react";
+import { LogOut, User, CalendarIcon, Settings2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+
+import Image from "next/image"
 
 const CATEGORIES: { value: Category; label: string }[] = (
     Object.entries(CATEGORY_LABELS) as [Category, string][]
@@ -61,7 +73,7 @@ export default function DashboardPage() {
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [summary, setSummary] = useState<TransactionSummary | null>(null);
-    const [categorySummary, setCategorySummary] = useState<CategorySummary[]>([]);
+    const [categorySummary, setCategorySummary] = useState<CategorySummaryType[]>([]);
     const [selectedCategory, setSelectedCategory] = useState<Category | "">("");
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -71,6 +83,11 @@ export default function DashboardPage() {
     const [startDate, setStartDate] = useState<string | null>(null);
     const [endDate, setEndDate] = useState<string | null>(null);
 
+    // --- Categorias (globais + customizadas) ---
+    const [globalCategories, setGlobalCategories] = useState<UserCategory[]>([]);
+    const [customCategories, setCustomCategories] = useState<UserCategory[]>([]);
+    const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
+
     useEffect(() => {
         if (!getToken()) {
             router.replace("/login");
@@ -79,12 +96,21 @@ export default function DashboardPage() {
         }
     }, [router]);
 
+    // Carregar categorias (globais + customizadas)
+    const loadCategories = useCallback(async () => {
+        try {
+            const data = await getCategories();
+            setGlobalCategories(data.global);
+            setCustomCategories(data.custom);
+        } catch (err) {
+            // Silencioso — categorias custom são opcionais
+        }
+    }, []);
+
     function buildPeriodDates(type: "7" | "15" | "30") {
         const end = new Date();
         const start = new Date();
-
         start.setDate(end.getDate() - Number(type));
-
         return {
             start: start.toISOString(),
             end: end.toISOString(),
@@ -98,21 +124,63 @@ export default function DashboardPage() {
         try {
             let tx: Transaction[] = [];
             let sum: TransactionSummary | null = null;
-            let catSum: CategorySummary[] = [];
+            let catSum: CategorySummaryType[] = [];
 
-            // 🔥 CASO 1 — Existe filtro de período
+            const calculateSummary = (transactions: Transaction[]) => {
+                const totalIncome = transactions
+                    .filter((t) => t.type === "INCOME")
+                    .reduce((acc, t) => acc + t.amount, 0);
+
+                const totalExpense = transactions
+                    .filter((t) => t.type === "EXPENSE")
+                    .reduce((acc, t) => acc + t.amount, 0);
+
+                return {
+                    totalIncome,
+                    totalExpense,
+                    balance: totalIncome - totalExpense,
+                };
+            };
+
+            const buildCategorySummary = (
+                categoryIdOrName: string,
+                transactions: Transaction[]
+            ): CategorySummaryType[] => {
+                const { totalIncome, totalExpense } = calculateSummary(transactions);
+
+                const isGlobal = categoryIdOrName in CATEGORY_LABELS;
+
+                return [
+                    isGlobal
+                        ? {
+                            type: "global",
+                            category: categoryIdOrName as Category,
+                            income: totalIncome,
+                            expense: totalExpense,
+                        }
+                        : {
+                            type: "custom",
+                            category: categoryIdOrName,
+                            income: totalIncome,
+                            expense: totalExpense,
+                        },
+                ];
+            };
+
+            // ========================
+            // CASO COM FILTRO DE PERÍODO
+            // ========================
             if (periodFilter) {
                 let start: string;
                 let end: string;
 
                 if (periodFilter === "custom") {
                     if (!startDate || !endDate) {
-                        setIsLoading(false);
                         return;
                     }
 
-                    start = new Date(startDate + "T00:00:00Z").toISOString();
-                    end = new Date(endDate + "T23:59:59Z").toISOString();
+                    start = new Date(`${startDate}T00:00:00`).toISOString();
+                    end = new Date(`${endDate}T23:59:59`).toISOString();
                 } else {
                     const dates = buildPeriodDates(periodFilter);
                     start = dates.start;
@@ -127,31 +195,18 @@ export default function DashboardPage() {
                     ]);
                 } else {
                     tx = await getTransactionsByPeriod(start, end);
-                    tx = tx.filter(t => t.category === selectedCategory);
 
-                    const totalIncome = tx
-                        .filter(t => t.type === "INCOME")
-                        .reduce((acc, t) => acc + t.amount, 0);
+                    const filtered = tx.filter(
+                        (t) => t.categoryId === selectedCategory
+                    );
 
-                    const totalExpense = tx
-                        .filter(t => t.type === "EXPENSE")
-                        .reduce((acc, t) => acc + t.amount, 0);
-
-                    sum = {
-                        totalIncome,
-                        totalExpense,
-                        balance: totalIncome - totalExpense,
-                    };
-
-                    catSum = [{
-                        category: selectedCategory,
-                        income: totalIncome,
-                        expense: totalExpense,
-                    }];
+                    sum = calculateSummary(filtered);
+                    catSum = buildCategorySummary(selectedCategory, filtered);
                 }
             }
-
-            // 🔥 CASO 2 — Sem filtro de período (comportamento atual)
+                // ========================
+                // CASO SEM FILTRO DE PERÍODO
+            // ========================
             else {
                 const now = new Date();
                 const year = now.getFullYear();
@@ -166,32 +221,14 @@ export default function DashboardPage() {
                 } else {
                     tx = await getTransactionsByCategory(selectedCategory);
 
-                    const totalIncome = tx
-                        .filter(t => t.type === "INCOME")
-                        .reduce((acc, t) => acc + t.amount, 0);
-
-                    const totalExpense = tx
-                        .filter(t => t.type === "EXPENSE")
-                        .reduce((acc, t) => acc + t.amount, 0);
-
-                    sum = {
-                        totalIncome,
-                        totalExpense,
-                        balance: totalIncome - totalExpense,
-                    };
-
-                    catSum = [{
-                        category: selectedCategory,
-                        income: totalIncome,
-                        expense: totalExpense,
-                    }];
+                    sum = calculateSummary(tx);
+                    catSum = buildCategorySummary(selectedCategory, tx);
                 }
             }
 
             setTransactions(tx);
             setSummary(sum);
             setCategorySummary(catSum);
-
         } catch (err) {
             const apiError = err as ApiError;
 
@@ -215,24 +252,31 @@ export default function DashboardPage() {
     }, [periodFilter]);
 
     useEffect(() => {
-        if (!isCheckingAuth) loadDashboardData();
-    }, [isCheckingAuth, loadDashboardData]);
+        if (!isCheckingAuth) {
+            loadDashboardData();
+            loadCategories();
+        }
+    }, [isCheckingAuth, loadDashboardData, loadCategories]);
+
+    const handleCategoryChange = () => {
+        loadCategories();
+    };
 
     const handleSaveTransaction = async (data: TransactionFormData, id?: string) => {
         setIsSubmitting(true);
         try {
             if (id) {
                 await updateTransaction(id, data);
-                toast.success("Transa\u00e7\u00e3o atualizada com sucesso!");
+                toast.success("Transação atualizada com sucesso!");
             } else {
                 await createTransaction(data);
-                toast.success("Transa\u00e7\u00e3o criada com sucesso!");
+                toast.success("Transação criada com sucesso!");
             }
             setEditingTransaction(null);
             loadDashboardData();
         } catch (err) {
             const apiError = err as ApiError;
-            toast.error(apiError.message || "Erro ao salvar transa\u00e7\u00e3o");
+            toast.error(apiError.message || "Erro ao salvar transação");
         } finally {
             setIsSubmitting(false);
         }
@@ -252,7 +296,7 @@ export default function DashboardPage() {
         }
         undoCancelledRef.current = false;
 
-        toast("Transa\u00e7\u00e3o exclu\u00edda", {
+        toast("Transação excluída", {
             description: deletedTransaction.description,
             duration: 6000,
             action: {
@@ -262,10 +306,12 @@ export default function DashboardPage() {
                     if (undoTimerRef.current) {
                         clearTimeout(undoTimerRef.current);
                     }
-                    setTransactions((prev) => [...prev, deletedTransaction].sort(
-                        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-                    ));
-                    toast.success("Transa\u00e7\u00e3o restaurada!");
+                    setTransactions((prev) =>
+                        [...prev, deletedTransaction].sort(
+                            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+                        )
+                    );
+                    toast.success("Transação restaurada!");
                 },
             },
             onDismiss: () => {
@@ -288,7 +334,7 @@ export default function DashboardPage() {
             loadDashboardData();
         } catch (err) {
             const apiError = err as ApiError;
-            toast.error(apiError.message || "Erro ao excluir transa\u00e7\u00e3o");
+            toast.error(apiError.message || "Erro ao excluir transação");
             loadDashboardData();
         }
     };
@@ -300,20 +346,87 @@ export default function DashboardPage() {
 
     if (isCheckingAuth) return null;
 
+    // Todas as categorias para o Select de filtro (globais + custom)
+    const allCategoryOptions = [
+        ...CATEGORIES,
+        ...customCategories.map((c) => ({ value: c.name as Category, label: c.name })),
+    ];
+
+    // Categorias globais da API para exibir no filtro com id
+    const globalCategoryOptions = globalCategories.map((c) => ({
+        value: c.id,
+        label: c.name,
+    }));
+
+    // Mapa de todas as categorias: id -> name (globais + custom)
+    const allCategoriesMap = new Map<string, string>();
+    for (const cat of globalCategories) {
+        allCategoriesMap.set(cat.id, cat.name);
+    }
+    for (const cat of customCategories) {
+        allCategoriesMap.set(cat.id, cat.name);
+    }
+
+    const getCategoryName = (categoryIdOrName: string) => {
+        // Primeiro procura pelo ID no mapa completo (globais + custom)
+        const byId = allCategoriesMap.get(categoryIdOrName);
+        if (byId) return byId;
+
+        // Fallback: procura pelo nome nas custom
+        const customByName = customCategories.find(c => c.name === categoryIdOrName);
+        if (customByName) return customByName.name;
+
+        // Fallback: procura pelo enum nas globais (ex: "ALIMENTACAO")
+        if (CATEGORY_LABELS[categoryIdOrName as Category]) {
+            return CATEGORY_LABELS[categoryIdOrName as Category];
+        }
+
+        return categoryIdOrName || "Sem categoria";
+    };
+
     return (
         <div className="min-h-svh bg-background flex flex-col">
             <Toaster position="top-right" />
             <header className="flex items-center justify-between px-6 py-4 border-b border-border/50 bg-card">
                 <div className="flex items-center gap-3">
-                    <div className="relative size-9 flex items-center justify-center overflow-hidden">
-                        <Image src="/logo.png" alt="Logo Clarus" width={36} height={36} className="object-contain" />
+                    <div className="relative w-9 h-9">
+                        <Image
+                            src="/logo.png"
+                            alt="Logo Clarus"
+                            fill
+                            className="object-contain"
+                            priority
+                        />
                     </div>
+
                     <div>
                         <h1 className="text-lg font-bold text-foreground">Clarus</h1>
-                        <p className="text-xs text-muted-foreground">Dados claros, decis&otilde;es melhores</p>
+                        <p className="text-xs text-muted-foreground">{"Dados claros, decisões melhores"}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
+                    {/* Botão Gerenciar Categorias */}
+                    <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
+                        <DialogTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                className="gap-2 text-muted-foreground hover:text-foreground hover:bg-muted"
+                            >
+                                <Settings2 className="size-4" />
+                                Categorias
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto p-0 gap-0">
+                            <CategoryManager
+                                customCategories={customCategories}
+                                onCategoryChange={() => {
+                                    loadCategories();
+                                    loadDashboardData(); // atualiza lista de transações imediatamente
+                                }}
+                            />
+                        </DialogContent>
+                    </Dialog>
+
                     <Button
                         variant="ghost"
                         onClick={() => router.push("/profile")}
@@ -322,7 +435,11 @@ export default function DashboardPage() {
                         <User className="size-4" />
                         Perfil
                     </Button>
-                    <Button variant="ghost" onClick={handleLogout} className="gap-2 text-muted-foreground hover:text-foreground hover:bg-muted">
+                    <Button
+                        variant="ghost"
+                        onClick={handleLogout}
+                        className="gap-2 text-muted-foreground hover:text-foreground hover:bg-muted"
+                    >
                         <LogOut className="size-4" />
                         Sair
                     </Button>
@@ -331,33 +448,54 @@ export default function DashboardPage() {
 
             <main className="flex-1 container mx-auto px-4 py-8 flex flex-col gap-6">
                 {/* Filtro */}
-                <div className="flex items-center gap-4">
-                    <Select value={selectedCategory} onValueChange={(value) => setSelectedCategory(value as Category)}>
+                <div className="flex flex-wrap items-center gap-4">
+                    <Select
+                        value={selectedCategory}
+                        onValueChange={(value) => setSelectedCategory(value as Category)}
+                    >
                         <SelectTrigger className="w-[260px]">
                             <SelectValue placeholder="Todas as categorias" />
                         </SelectTrigger>
                         <SelectContent>
-                            {CATEGORIES.map(cat => (
-                                <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+                            {CATEGORIES.map((cat) => (
+                                <SelectItem key={cat.value} value={cat.value}>
+                                    {cat.label}
+                                </SelectItem>
                             ))}
+                            {customCategories.length > 0 && (
+                                <>
+                                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t border-border/50 mt-1">
+                                        Minhas categorias
+                                    </div>
+                                    {customCategories.map((cat) => (
+                                        <SelectItem key={cat.id} value={cat.name}>
+                                            {cat.name}
+                                        </SelectItem>
+                                    ))}
+                                </>
+                            )}
                         </SelectContent>
                     </Select>
                     {selectedCategory && (
-                        <Button variant="outline" onClick={() => setSelectedCategory("")} className="border-border/50 text-muted-foreground hover:text-foreground">
+                        <Button
+                            variant="outline"
+                            onClick={() => setSelectedCategory("")}
+                            className="border-border/50 text-muted-foreground hover:text-foreground"
+                        >
                             Limpar filtro
                         </Button>
                     )}
                     <Select
                         value={periodFilter}
-                        onValueChange={(value) => setPeriodFilter(value as any)}
+                        onValueChange={(value) => setPeriodFilter(value as "7" | "15" | "30" | "custom")}
                     >
                         <SelectTrigger className="w-[220px]">
                             <SelectValue placeholder="Filtrar por período" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="7">Últimos 7 dias</SelectItem>
-                            <SelectItem value="15">Últimos 15 dias</SelectItem>
-                            <SelectItem value="30">Últimos 30 dias</SelectItem>
+                            <SelectItem value="7">{"Últimos 7 dias"}</SelectItem>
+                            <SelectItem value="15">{"Últimos 15 dias"}</SelectItem>
+                            <SelectItem value="30">{"Últimos 30 dias"}</SelectItem>
                             <SelectItem value="custom">Personalizado</SelectItem>
                         </SelectContent>
                     </Select>
@@ -373,19 +511,31 @@ export default function DashboardPage() {
                                         )}
                                     >
                                         <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {startDate ? format(new Date(startDate + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR }) : "Data inicial"}
+                                        {startDate
+                                            ? format(new Date(startDate + "T12:00:00"), "dd/MM/yyyy", {
+                                                locale: ptBR,
+                                            })
+                                            : "Data inicial"}
                                     </Button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0 border-border/50 bg-card rounded-xl shadow-lg" align="start">
+                                <PopoverContent
+                                    className="w-auto p-0 border-border/50 bg-card rounded-xl shadow-lg"
+                                    align="start"
+                                >
                                     <Calendar
                                         mode="single"
                                         selected={startDate ? new Date(startDate + "T12:00:00") : undefined}
-                                        onSelect={(day) => setStartDate(day ? format(day, "yyyy-MM-dd") : null)}
+                                        onSelect={(day) =>
+                                            setStartDate(day ? format(day, "yyyy-MM-dd") : null)
+                                        }
                                         locale={ptBR}
-                                        disabled={{ after: endDate ? new Date(endDate + "T12:00:00") : new Date() }}
+                                        disabled={{
+                                            after: endDate ? new Date(endDate + "T12:00:00") : new Date(),
+                                        }}
                                         className="p-3"
                                         classNames={{
-                                            month_caption: "flex items-center justify-center h-8 font-semibold text-sm text-foreground capitalize",
+                                            month_caption:
+                                                "flex items-center justify-center h-8 font-semibold text-sm text-foreground capitalize",
                                             weekday: "text-muted-foreground text-xs font-medium w-9",
                                             today: "bg-accent text-accent-foreground rounded-lg font-semibold",
                                         }}
@@ -403,22 +553,34 @@ export default function DashboardPage() {
                                         )}
                                     >
                                         <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {endDate ? format(new Date(endDate + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR }) : "Data final"}
+                                        {endDate
+                                            ? format(new Date(endDate + "T12:00:00"), "dd/MM/yyyy", {
+                                                locale: ptBR,
+                                            })
+                                            : "Data final"}
                                     </Button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0 border-border/50 bg-card rounded-xl shadow-lg" align="start">
+                                <PopoverContent
+                                    className="w-auto p-0 border-border/50 bg-card rounded-xl shadow-lg"
+                                    align="start"
+                                >
                                     <Calendar
                                         mode="single"
                                         selected={endDate ? new Date(endDate + "T12:00:00") : undefined}
-                                        onSelect={(day) => setEndDate(day ? format(day, "yyyy-MM-dd") : null)}
+                                        onSelect={(day) =>
+                                            setEndDate(day ? format(day, "yyyy-MM-dd") : null)
+                                        }
                                         locale={ptBR}
                                         disabled={{
-                                            before: startDate ? new Date(startDate + "T12:00:00") : undefined,
+                                            before: startDate
+                                                ? new Date(startDate + "T12:00:00")
+                                                : undefined,
                                             after: new Date(),
                                         }}
                                         className="p-3"
                                         classNames={{
-                                            month_caption: "flex items-center justify-center h-8 font-semibold text-sm text-foreground capitalize",
+                                            month_caption:
+                                                "flex items-center justify-center h-8 font-semibold text-sm text-foreground capitalize",
                                             weekday: "text-muted-foreground text-xs font-medium w-9",
                                             today: "bg-accent text-accent-foreground rounded-lg font-semibold",
                                         }}
@@ -450,7 +612,13 @@ export default function DashboardPage() {
 
                 <CategorySummaryList data={categorySummary} isLoading={isLoading} error={error} />
 
-                <TransactionForm onSubmit={handleSaveTransaction} isSubmitting={isSubmitting} initialData={editingTransaction} />
+                <TransactionForm
+                    onSubmit={handleSaveTransaction}
+                    isSubmitting={isSubmitting}
+                    initialData={editingTransaction}
+                    globalCategories={globalCategories}
+                    customCategories={customCategories}
+                />
 
                 <TransactionList
                     transactions={transactions}
@@ -458,12 +626,13 @@ export default function DashboardPage() {
                     error={error}
                     onEdit={(t) => setEditingTransaction(t)}
                     onDelete={handleDeleteTransaction}
+                    getCategoryName={getCategoryName}
                 />
             </main>
 
             <footer className="border-t border-border/50 bg-card mt-auto">
                 <div className="container mx-auto px-4 py-4 text-center text-sm text-muted-foreground">
-                    Clarus &copy; 2026 &mdash; Dados claros, decisões melhores
+                    {"Clarus \u00A9 2026 \u2014 Dados claros, decisões melhores"}
                 </div>
             </footer>
         </div>
