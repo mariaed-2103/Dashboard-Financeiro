@@ -1,6 +1,5 @@
 package com.finance_dashboard.ProjetoT1.dto;
 
-import com.finance_dashboard.ProjetoT1.model.Category;
 import com.finance_dashboard.ProjetoT1.model.TransactionType;
 
 import java.math.BigDecimal;
@@ -12,7 +11,7 @@ public class TransactionRequestDTO {
     private BigDecimal amount;
     private TransactionType type;
     private LocalDate date;
-    private Category category;
+    private String categoryId;
 
 
     public String getDescription() {
@@ -31,8 +30,8 @@ public class TransactionRequestDTO {
         return date;
     }
 
-    public Category getCategory() {
-        return category;
+    public String getCategoryId() {
+        return categoryId;
     }
 
     private void validateTransaction(TransactionRequestDTO dto) {
@@ -53,7 +52,7 @@ public class TransactionRequestDTO {
             throw new IllegalArgumentException("Data é obrigatória");
         }
 
-        if (dto.getCategory() == null) {
+        if (dto.getCategoryId() == null) {
             throw new IllegalArgumentException("Categoria é obrigatória");
         }
     }

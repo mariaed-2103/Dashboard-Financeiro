@@ -6,7 +6,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.LocalDate;
 
 @Document(collection = "transactions")
 @CompoundIndex(name = "user_date_deleted_idx", def = "{'userEmail': 1, 'date': 1, 'deletedAt': 1}")
@@ -23,7 +22,7 @@ public class Transaction {
 
     private Instant date;
 
-    private Category category;
+    private String categoryId;
 
     private String userEmail;
 
@@ -37,12 +36,12 @@ public class Transaction {
     }
 
     public Transaction(String description, BigDecimal amount,
-                       TransactionType type, Category category,
+                       TransactionType type, String categoryId,
                        Instant date) {
         this.description = description;
         this.amount = amount;
         this.type = type;
-        this.category = category;
+        this.categoryId = categoryId;
         this.date = date;
     }
 
@@ -66,8 +65,8 @@ public class Transaction {
         return date;
     }
 
-    public Category getCategory() {
-        return category;
+    public String getCategoryId() {
+        return categoryId;
     }
 
     public String getUserEmail() {return userEmail;}
@@ -88,8 +87,8 @@ public class Transaction {
         this.date = date;
     }
 
-    public void setCategory(Category category) {
-        this.category = category;
+    public void setCategoryId(String categoryId) {
+        this.categoryId = categoryId;
     }
 
     public void setUserEmail(String userEmail) {this.userEmail = userEmail;}

@@ -3,7 +3,6 @@ package com.finance_dashboard.ProjetoT1.controller;
 import com.finance_dashboard.ProjetoT1.dto.CategorySummaryDTO;
 import com.finance_dashboard.ProjetoT1.dto.SummaryResponseDTO;
 import com.finance_dashboard.ProjetoT1.dto.TransactionRequestDTO;
-import com.finance_dashboard.ProjetoT1.model.Category;
 import com.finance_dashboard.ProjetoT1.model.Transaction;
 import com.finance_dashboard.ProjetoT1.service.TransactionService;
 import org.springframework.http.HttpStatus;
@@ -49,10 +48,10 @@ public class TransactionController {
 
     @GetMapping("/by-category")
     public ResponseEntity<List<Transaction>> findByCategory(
-            @RequestParam Category category
+            @RequestParam String categoryId
     ) {
         return ResponseEntity.ok(
-                transactionService.findByCategory(category)
+                transactionService.findByCategory(categoryId)
         );
     }
 
