@@ -1,0 +1,5 @@
+package com.finance_dashboard.ProjetoT1.dto;
+
+public record CategoryRequestDTO(
+        String name
+) {}
