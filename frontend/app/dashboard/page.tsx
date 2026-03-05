@@ -457,23 +457,17 @@ export default function DashboardPage() {
                             <SelectValue placeholder="Todas as categorias" />
                         </SelectTrigger>
                         <SelectContent>
-                            {CATEGORIES.map((cat) => (
-                                <SelectItem key={cat.value} value={cat.value}>
-                                    {cat.label}
+                            {/* Use apenas o que vem do banco (globalCategories + customCategories) */}
+                            {globalCategories.map((cat) => (
+                                <SelectItem key={cat.id} value={cat.id}>
+                                    {cat.name}
                                 </SelectItem>
                             ))}
-                            {customCategories.length > 0 && (
-                                <>
-                                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t border-border/50 mt-1">
-                                        Minhas categorias
-                                    </div>
-                                    {customCategories.map((cat) => (
-                                        <SelectItem key={cat.id} value={cat.name}>
-                                            {cat.name}
-                                        </SelectItem>
-                                    ))}
-                                </>
-                            )}
+                            {customCategories.map((cat) => (
+                                <SelectItem key={cat.id} value={cat.id}>
+                                    {cat.name}
+                                </SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                     {selectedCategory && (
