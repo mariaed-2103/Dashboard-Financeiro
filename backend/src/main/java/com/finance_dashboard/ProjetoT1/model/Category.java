@@ -9,7 +9,7 @@ import java.time.Instant;
 @Document(collection = "categories")
 @CompoundIndex(
         name = "user_normalized_unique_idx",
-        def = "{'userEmail': 1, 'normalizedName': 1}",
+        def = "{'userEmail': 1, 'normalizedName': 1, 'active': 1}",
         unique = true
 )
 public class Category {

@@ -182,16 +182,9 @@ public class TransactionService {
                         );
 
         Map<String, BigDecimal[]> totals = new HashMap<>();
-
         for (Transaction transaction : transactions) {
-
-            totals.putIfAbsent(
-                    transaction.getCategoryId(),
-                    new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO}
-            );
-
+            totals.putIfAbsent(transaction.getCategoryId(), new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO});
             BigDecimal[] values = totals.get(transaction.getCategoryId());
-
             if (transaction.getType() == TransactionType.INCOME) {
                 values[0] = values[0].add(transaction.getAmount());
             } else {
@@ -199,59 +192,35 @@ public class TransactionService {
             }
         }
 
-        return totals.entrySet()
-                .stream()
-                .map(e -> new CategorySummaryDTO(
-                        e.getKey(),
-                        e.getValue()[0],
-                        e.getValue()[1]
-                ))
+        return totals.entrySet().stream()
+                .map(e -> {
+                    // BUSCA O NOME DA CATEGORIA PELO ID
+                    String categoryName = categoryRepository.findById(e.getKey())
+                            .map(Category::getName)
+                            .orElse("Sem categoria");
+
+                    return new CategorySummaryDTO(
+                            e.getKey(),
+                            categoryName, // Passa o nome para o DTO
+                            e.getValue()[0],
+                            e.getValue()[1]
+                    );
+                })
                 .toList();
     }
 
-    public List<CategorySummaryDTO> getCategorySummaryByUser(
-            int year,
-            int month
-    ) {
+    public List<CategorySummaryDTO> getCategorySummaryByUser(int year, int month) {
         YearMonth yearMonth = YearMonth.of(year, month);
-
-        Instant start = yearMonth
-                .atDay(1)
-                .atStartOfDay(ZoneOffset.UTC)
-                .toInstant();
-
-        Instant end = yearMonth
-                .atEndOfMonth()
-                .atTime(23, 59, 59)
-                .atZone(ZoneOffset.UTC)
-                .toInstant();
-
+        Instant start = yearMonth.atDay(1).atStartOfDay(ZoneOffset.UTC).toInstant();
+        Instant end = yearMonth.atEndOfMonth().atTime(23, 59, 59).atZone(ZoneOffset.UTC).toInstant();
         String userEmail = AuthenticatedUser.getEmail();
 
-        System.out.println("START INSTANT: " + start);
-        System.out.println("END INSTANT: " + end);
-        System.out.println("USER EMAIL: " + userEmail);
-
-        List<Transaction> transactions =
-                transactionRepository.findByUserEmailAndDateBetweenAndDeletedAtIsNull(
-                        userEmail,
-                        start,
-                        end
-                );
-
-        System.out.println("TRANSACTIONS FOUND: " + transactions.size());
+        List<Transaction> transactions = transactionRepository.findByUserEmailAndDateBetweenAndDeletedAtIsNull(userEmail, start, end);
 
         Map<String, BigDecimal[]> totals = new HashMap<>();
-
         for (Transaction t : transactions) {
-
-            totals.putIfAbsent(
-                    t.getCategoryId(),
-                    new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO}
-            );
-
+            totals.putIfAbsent(t.getCategoryId(), new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO});
             BigDecimal[] values = totals.get(t.getCategoryId());
-
             if (t.getType() == TransactionType.INCOME) {
                 values[0] = values[0].add(t.getAmount());
             } else {
@@ -259,15 +228,20 @@ public class TransactionService {
             }
         }
 
-        return totals.entrySet()
-                .stream()
-                .map(e ->
-                        new CategorySummaryDTO(
-                                e.getKey(),
-                                e.getValue()[0],
-                                e.getValue()[1]
-                        )
-                )
+        return totals.entrySet().stream()
+                .map(e -> {
+                    // BUSCA O NOME DA CATEGORIA (Igual ao método que funcionou)
+                    String categoryName = categoryRepository.findById(e.getKey())
+                            .map(Category::getName)
+                            .orElse("Sem categoria");
+
+                    return new CategorySummaryDTO(
+                            e.getKey(),
+                            categoryName, // Adicionado o 4º argumento aqui
+                            e.getValue()[0],
+                            e.getValue()[1]
+                    );
+                })
                 .toList();
     }
 
@@ -351,24 +325,13 @@ public class TransactionService {
         return new SummaryResponseDTO(totalIncome, totalExpense, balance);
     }
 
-    public List<CategorySummaryDTO> getCategorySummaryByDateRange(
-            Instant start,
-            Instant end
-    ) {
-
+    public List<CategorySummaryDTO> getCategorySummaryByDateRange(Instant start, Instant end) {
         List<Transaction> transactions = findByDateRange(start, end);
 
         Map<String, BigDecimal[]> totals = new HashMap<>();
-
         for (Transaction t : transactions) {
-
-            totals.putIfAbsent(
-                    t.getCategoryId(),
-                    new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO}
-            );
-
+            totals.putIfAbsent(t.getCategoryId(), new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO});
             BigDecimal[] values = totals.get(t.getCategoryId());
-
             if (t.getType() == TransactionType.INCOME) {
                 values[0] = values[0].add(t.getAmount());
             } else {
@@ -376,15 +339,20 @@ public class TransactionService {
             }
         }
 
-        return totals.entrySet()
-                .stream()
-                .map(e ->
-                        new CategorySummaryDTO(
-                                e.getKey(),
-                                e.getValue()[0],
-                                e.getValue()[1]
-                        )
-                )
+        return totals.entrySet().stream()
+                .map(e -> {
+                    // BUSCA O NOME DA CATEGORIA (Igual ao método que funcionou)
+                    String categoryName = categoryRepository.findById(e.getKey())
+                            .map(Category::getName)
+                            .orElse("Sem categoria");
+
+                    return new CategorySummaryDTO(
+                            e.getKey(),
+                            categoryName, // Adicionado o 4º argumento aqui
+                            e.getValue()[0],
+                            e.getValue()[1]
+                    );
+                })
                 .toList();
     }
 

@@ -5,7 +5,7 @@ import com.finance_dashboard.ProjetoT1.repository.CategoryRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 @Component
@@ -34,16 +34,23 @@ public class CategoryDataInitializer implements CommandLineRunner {
 
         for (String name : defaultCategories) {
 
-            boolean exists = categoryRepository
-                    .existsByNameAndGlobalTrue(name);
+            String normalized = name.toLowerCase();
+
+            boolean exists =
+                    categoryRepository.existsByUserEmailAndNormalizedName(
+                            null,
+                            normalized
+                    );
 
             if (!exists) {
 
                 Category category = new Category();
                 category.setName(name);
-                category.setGlobal(true);
-                category.setUserId(null);
-                category.setCreatedAt(LocalDateTime.now());
+                category.setNormalizedName(normalized);
+                category.setUserEmail(null);
+                category.setDefault(true);
+                category.setActive(true);
+                category.setCreatedAt(Instant.now());
 
                 categoryRepository.save(category);
             }

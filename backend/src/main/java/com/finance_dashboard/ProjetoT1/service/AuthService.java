@@ -40,8 +40,6 @@ public class AuthService {
         );
 
         userRepository.save(user);
-
-        categoryService.createDefaultCategories(user.getEmail());
     }
 
     public AuthResponseDTO login(LoginRequestDTO dto) {

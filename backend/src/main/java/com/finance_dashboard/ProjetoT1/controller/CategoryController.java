@@ -1,96 +1,57 @@
 package com.finance_dashboard.ProjetoT1.controller;
 
-import com.finance_dashboard.ProjetoT1.dto.CategoryRequestDTO;
-<<<<<<< HEAD
+import com.finance_dashboard.ProjetoT1.config.AuthenticatedUser;
 import com.finance_dashboard.ProjetoT1.dto.CategoriesResponseDTO;
+import com.finance_dashboard.ProjetoT1.dto.CategoryRequestDTO;
 import com.finance_dashboard.ProjetoT1.model.Category;
+import com.finance_dashboard.ProjetoT1.repository.CategoryRepository;
 import com.finance_dashboard.ProjetoT1.service.CategoryService;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-@RestController
-@RequestMapping("/categories")
-public class CategoryController {
-
-    private final CategoryService service;
-
-    public CategoryController(CategoryService service) {
-        this.service = service;
-    }
-
-    // Listar categorias (globais + custom)
-    @GetMapping
-    public ResponseEntity<CategoriesResponseDTO> getCategories() {
-        return ResponseEntity.ok(service.getCategories());
-    }
-
-    // Criar categoria customizada
-    @PostMapping
-    public ResponseEntity<Category> createCategory(@RequestBody CategoryRequestDTO request) throws Exception {
-        return ResponseEntity.ok(service.createCategory(request.name()));
-    }
-
-    // Deletar categoria customizada
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCategory(@PathVariable String id) throws Exception {
-        service.deleteCategory(id);
-        return ResponseEntity.noContent().build();
-    }
-}
-=======
-import com.finance_dashboard.ProjetoT1.model.Category;
-import com.finance_dashboard.ProjetoT1.service.CategoryService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/categories")
-@RequiredArgsConstructor
 public class CategoryController {
 
     private final CategoryService categoryService;
+    private final CategoryRepository categoryRepository;
+
+    public CategoryController(
+            CategoryService categoryService,
+            CategoryRepository categoryRepository
+    ) {
+        this.categoryService = categoryService;
+        this.categoryRepository = categoryRepository;
+    }
 
     @GetMapping
-    public ResponseEntity<List<Category>> listCategories(
-            @AuthenticationPrincipal String userEmail) {
+    public CategoriesResponseDTO getCategories() {
 
-        return ResponseEntity.ok(
-                categoryService.listActiveByUser(userEmail)
-        );
+        String email = AuthenticatedUser.getEmail();
+
+        List<Category> global =
+                categoryRepository.findByUserEmailIsNullAndActiveTrue();
+
+        List<Category> custom =
+                categoryService.listActiveByUser(email);
+
+        return new CategoriesResponseDTO(global, custom);
     }
 
     @PostMapping
-    public ResponseEntity<Category> create(
-            @AuthenticationPrincipal String userEmail,
-            @RequestBody CategoryRequestDTO dto) {
+    public Category createCategory(@RequestBody CategoryRequestDTO body) {
 
-        return ResponseEntity.ok(
-                categoryService.create(userEmail, dto.getName())
-        );
-    }
+        String email = AuthenticatedUser.getEmail();
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Category> update(
-            @AuthenticationPrincipal String userEmail,
-            @PathVariable String id,
-            @RequestBody CategoryRequestDTO dto) {
-
-        return ResponseEntity.ok(
-                categoryService.rename(userEmail, id, dto.getName())
-        );
+        return categoryService.create(email, body.getName());
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(
-            @AuthenticationPrincipal String userEmail,
-            @PathVariable String id) {
+    public void deleteCategory(@PathVariable String id) {
 
-        categoryService.softDelete(userEmail, id);
-        return ResponseEntity.noContent().build();
+        String email = AuthenticatedUser.getEmail();
+
+        categoryService.softDelete(email, id);
     }
 }
->>>>>>> origin/main

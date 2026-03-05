@@ -6,15 +6,18 @@ public class CategorySummaryDTO {
 
 
     private String categoryId;
+    private String categoryName;
     private BigDecimal income;
     private BigDecimal expense;
 
-
-    public CategorySummaryDTO(String categoryId, BigDecimal income, BigDecimal expense) {
+    public CategorySummaryDTO(String categoryId, String categoryName, BigDecimal income, BigDecimal expense) {
         this.categoryId = categoryId;
+        this.categoryName = categoryName;
         this.income = income;
         this.expense = expense;
     }
+
+
     public String getCategoryId() {
         return categoryId;
     }
@@ -26,6 +29,8 @@ public class CategorySummaryDTO {
     public BigDecimal getExpense() {
         return expense;
     }
+
+    public String getCategoryName() { return categoryName; }
 
 
 
