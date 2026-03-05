@@ -39,11 +39,9 @@ public class TransactionService {
 
         String userEmail = AuthenticatedUser.getEmail();
 
-        Category category = categoryRepository
-                .findByIdAndUserEmailAndActiveTrue(dto.getCategoryId(), userEmail)
-                .orElseThrow(() ->
-                        new IllegalArgumentException("Categoria não encontrada")
-                );
+        Category category = categoryRepository.findById(dto.getCategoryId())
+                .filter(c -> c.isActive() && (c.getUserEmail() == null || c.getUserEmail().equals(userEmail)))
+                .orElseThrow(() -> new IllegalArgumentException("Categoria não encontrada"));
 
         Transaction transaction = new Transaction(
                 dto.getDescription(),
