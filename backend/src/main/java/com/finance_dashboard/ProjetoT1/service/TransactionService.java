@@ -246,25 +246,24 @@ public class TransactionService {
     }
 
     public Transaction update(String id, TransactionRequestDTO dto) {
-
         String userEmail = AuthenticatedUser.getEmail();
 
         Transaction transaction = transactionRepository
                 .findByIdAndUserEmailAndDeletedAtIsNull(id, userEmail)
-                .orElseThrow(() ->
-                        new RuntimeException("Transação não encontrada")
-                );
+                .orElseThrow(() -> new RuntimeException("Transação não encontrada"));
 
         validateTransaction(dto);
+
+        // ✅ AJUSTE AQUI: Busca a categoria permitindo e-mail nulo (Global) ou e-mail do usuário (Custom)
+        categoryRepository.findById(dto.getCategoryId())
+                .filter(c -> c.isActive() && (c.getUserEmail() == null || c.getUserEmail().equals(userEmail)))
+                .orElseThrow(() -> new IllegalArgumentException("Categoria não encontrada"));
 
         transaction.setDescription(dto.getDescription());
         transaction.setAmount(dto.getAmount());
         transaction.setType(dto.getType());
         transaction.setCategoryId(dto.getCategoryId());
-        transaction.setDate(
-                Instant.parse(dto.getDate() + "T00:00:00Z")
-        );
-
+        transaction.setDate(Instant.parse(dto.getDate() + "T00:00:00Z"));
         transaction.setUpdatedAt(Instant.now());
 
         return transactionRepository.save(transaction);

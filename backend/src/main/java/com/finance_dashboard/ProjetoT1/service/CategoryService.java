@@ -38,8 +38,12 @@ public class CategoryService {
 
         String normalized = normalize(name);
 
-        if (repository.existsByUserEmailAndNormalizedName(userEmail, normalized)) {
-            throw new IllegalArgumentException("Categoria já existe");
+        // ✅ Verifica se já existe nas GLOBAIS ou nas CUSTOM do usuário
+        boolean existsGlobal = repository.existsByUserEmailAndNormalizedName(null, normalized);
+        boolean existsCustom = repository.existsByUserEmailAndNormalizedName(userEmail, normalized);
+
+        if (existsGlobal || existsCustom) {
+            throw new IllegalArgumentException("Esta categoria já existe no sistema.");
         }
 
         Category category = new Category();
@@ -102,7 +106,15 @@ public class CategoryService {
 
 
     private String normalize(String value) {
-        return value.toLowerCase().trim();
+        if (value == null) return "";
+        return value.toLowerCase()
+                .trim()
+                .replaceAll("[áàâãä]", "a")
+                .replaceAll("[éèêë]", "e")
+                .replaceAll("[íìîï]", "i")
+                .replaceAll("[óòôõö]", "o")
+                .replaceAll("[úùûü]", "u")
+                .replaceAll("ç", "c");
     }
 
     public List<Category> findAllByUser(String userEmail) {
