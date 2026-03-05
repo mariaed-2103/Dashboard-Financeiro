@@ -265,6 +265,7 @@ export default function DashboardPage() {
     const handleSaveTransaction = async (data: TransactionFormData, id?: string) => {
         setIsSubmitting(true);
         try {
+            // O segredo está aqui: o TransactionForm passa o id se for edição
             if (id) {
                 await updateTransaction(id, data);
                 toast.success("Transação atualizada com sucesso!");

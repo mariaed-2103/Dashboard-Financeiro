@@ -74,21 +74,20 @@ export function TransactionForm({ onSubmit, isSubmitting, initialData, globalCat
         if (!date) return setError("Data é obrigatória");
 
         try {
+
             await onSubmit({
                 description,
                 amount: amountValue,
                 type,
                 categoryId,
                 date: format(date, "yyyy-MM-dd"),
-            })
+            }, initialData?.id); // Se for edição, o ID vai aqui
 
-            setDescription("");
-            setAmount("");
-            setType("EXPENSE");
-            setCategoryId("");
-            setDate(new Date());
-
-
+            if (!initialData) { // Limpa apenas se for nova transação
+                setDescription("");
+                setAmount("");
+                setCategoryId("");
+            }
         } catch {
             setError("Erro ao salvar transação. Tente novamente.");
         }
