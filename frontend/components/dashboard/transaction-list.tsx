@@ -29,9 +29,10 @@ interface TransactionListProps {
     onEdit: (t: Transaction) => void;
     onDelete: (id: string) => void;
     getCategoryName: (categoryIdOrName: string) => string;
+    isBlurred?: boolean;
 }
 
-export function TransactionList({ transactions, isLoading, error, onEdit, onDelete,  getCategoryName }: TransactionListProps) {
+export function TransactionList({ transactions, isLoading, error, onEdit, onDelete, getCategoryName, isBlurred }: TransactionListProps) {
     const [deleteTarget, setDeleteTarget] = useState<Transaction | null>(null);
 
     const formatCurrency = (value: number) =>
@@ -111,7 +112,9 @@ export function TransactionList({ transactions, isLoading, error, onEdit, onDele
                                                 </div>
                                             </TableCell>
                                             <TableCell className={`text-right font-bold ${t.type === "INCOME" ? "text-accent" : "text-red-500"}`}>
-                                                {t.type === "INCOME" ? "+" : "-"}{formatCurrency(t.amount)}
+                                                <span className={`transition-all duration-300 ${isBlurred ? "blur-sm select-none" : ""}`}>
+                                                    {t.type === "INCOME" ? "+" : "-"}{formatCurrency(t.amount)}
+                                                </span>
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex items-center justify-end gap-1">

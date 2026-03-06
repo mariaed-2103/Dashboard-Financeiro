@@ -57,7 +57,7 @@ import {
 import { Toaster, toast } from "sonner";
 import { getToken, removeToken } from "@/services/auth";
 import { getUserProfile } from "@/services/api";
-import { LogOut, User, CalendarIcon, Settings2 } from "lucide-react";
+import { LogOut, User, CalendarIcon, Settings2, Eye, EyeOff } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -88,6 +88,9 @@ export default function DashboardPage() {
     const [globalCategories, setGlobalCategories] = useState<UserCategory[]>([]);
     const [customCategories, setCustomCategories] = useState<UserCategory[]>([]);
     const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
+
+    // --- Privacidade: ocultar valores monetários ---
+    const [isBlurred, setIsBlurred] = useState(false);
 
     // --- Perfil do usuário para saudação ---
     const [userName, setUserName] = useState<string>("");
@@ -436,6 +439,16 @@ export default function DashboardPage() {
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
+                    {/* Botão de privacidade: ocultar valores */}
+                    <Button
+                        variant="ghost"
+                        onClick={() => setIsBlurred((prev) => !prev)}
+                        className="gap-2 text-muted-foreground hover:text-foreground hover:bg-muted"
+                        title={isBlurred ? "Mostrar valores" : "Ocultar valores"}
+                    >
+                        {isBlurred ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                    </Button>
+
                     {/* Botão Gerenciar Categorias */}
                     <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
                         <DialogTrigger asChild>
@@ -640,14 +653,14 @@ export default function DashboardPage() {
                     )}
                 </div>
 
-                <SummaryCards summary={summary} isLoading={isLoading} error={error} />
+                <SummaryCards summary={summary} isLoading={isLoading} error={error} isBlurred={isBlurred} />
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <CategoryPieChart data={categorySummary} type="expense" userCategories={allUserCategories} />
                     <CategoryBarChart data={categorySummary} userCategories={allUserCategories} />
                 </div>
 
-                <CategorySummaryList data={categorySummary} isLoading={isLoading} error={error} userCategories={allUserCategories} />
+                <CategorySummaryList data={categorySummary} isLoading={isLoading} error={error} userCategories={allUserCategories} isBlurred={isBlurred} />
 
                 <TransactionForm
                     onSubmit={handleSaveTransaction}
@@ -664,6 +677,7 @@ export default function DashboardPage() {
                     onEdit={(t) => setEditingTransaction(t)}
                     onDelete={handleDeleteTransaction}
                     getCategoryName={getCategoryName}
+                    isBlurred={isBlurred}
                 />
             </main>
 

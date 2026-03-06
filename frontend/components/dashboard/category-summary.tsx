@@ -7,13 +7,14 @@ interface Props {
     isLoading: boolean
     error?: string | null
     userCategories?: UserCategory[]
+    isBlurred?: boolean
 }
 
 function formatCurrency(value: number) {
     return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
 }
 
-export function CategorySummaryList({ data, isLoading, error, userCategories }: Props) {
+export function CategorySummaryList({ data, isLoading, error, userCategories, isBlurred }: Props) {
     if (isLoading) {
         return (
             <Card className="border-border/50 animate-pulse">
@@ -71,16 +72,16 @@ export function CategorySummaryList({ data, isLoading, error, userCategories }: 
               </span>
                             <div className="flex items-center gap-4 text-sm">
                                 {item.income > 0 && (
-                                    <span className="text-emerald-400">
-                    {"+ "}
+                                    <span className={`text-emerald-400 transition-all duration-300 ${isBlurred ? "blur-sm select-none" : ""}`}>
+                                        {"+ "}
                                         {formatCurrency(item.income)}
-                  </span>
+                                    </span>
                                 )}
                                 {item.expense > 0 && (
-                                    <span className="text-red-400">
-                    {"- "}
+                                    <span className={`text-red-400 transition-all duration-300 ${isBlurred ? "blur-sm select-none" : ""}`}>
+                                        {"- "}
                                         {formatCurrency(item.expense)}
-                  </span>
+                                    </span>
                                 )}
                             </div>
                         </div>
