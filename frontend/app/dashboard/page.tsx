@@ -448,7 +448,7 @@ export default function DashboardPage() {
                     <Button
                         variant="ghost"
                         onClick={() => setIsBlurred((prev) => !prev)}
-                        className="gap-2 text-muted-foreground hover:text-foreground hover:bg-muted"
+                        className="cursor-pointer gap-2 text-muted-foreground hover:text-foreground hover:bg-muted"
                         title={isBlurred ? "Mostrar valores" : "Ocultar valores"}
                     >
                         {isBlurred ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -459,7 +459,7 @@ export default function DashboardPage() {
                         <DialogTrigger asChild>
                             <Button
                                 variant="ghost"
-                                className="gap-2 text-muted-foreground hover:text-foreground hover:bg-muted"
+                                className="cursor-pointer gap-2 text-muted-foreground hover:text-foreground hover:bg-muted"
                             >
                                 <Settings2 className="size-4" />
                                 Categorias
@@ -479,7 +479,7 @@ export default function DashboardPage() {
                     <Button
                         variant="ghost"
                         onClick={() => router.push("/profile")}
-                        className="gap-2 text-muted-foreground hover:text-foreground hover:bg-muted"
+                        className="cursor-pointer gap-2 text-muted-foreground hover:text-foreground hover:bg-muted"
                     >
                         <User className="size-4" />
                         Perfil
@@ -487,7 +487,7 @@ export default function DashboardPage() {
                     <Button
                         variant="ghost"
                         onClick={handleLogout}
-                        className="gap-2 text-muted-foreground hover:text-foreground hover:bg-muted"
+                        className="cursor-pointer gap-2 text-muted-foreground hover:text-foreground hover:bg-muted"
                     >
                         <LogOut className="size-4" />
                         Sair
@@ -535,7 +535,7 @@ export default function DashboardPage() {
                         <Button
                             variant="outline"
                             onClick={() => setSelectedCategory("")}
-                            className="border-border/50 text-muted-foreground hover:text-foreground"
+                            className="cursor-pointer border-border/50 text-muted-foreground hover:text-foreground"
                         >
                             Limpar filtro
                         </Button>
@@ -561,7 +561,7 @@ export default function DashboardPage() {
                                     <Button
                                         variant="outline"
                                         className={cn(
-                                            "w-[160px] justify-start text-left font-normal border-border/50",
+                                            "cursor-pointer w-[160px] justify-start text-left font-normal border-border/50",
                                             !startDate && "text-muted-foreground"
                                         )}
                                     >
@@ -603,7 +603,7 @@ export default function DashboardPage() {
                                     <Button
                                         variant="outline"
                                         className={cn(
-                                            "w-[160px] justify-start text-left font-normal border-border/50",
+                                            "cursor-pointer w-[160px] justify-start text-left font-normal border-border/50",
                                             !endDate && "text-muted-foreground"
                                         )}
                                     >
@@ -652,6 +652,7 @@ export default function DashboardPage() {
                                 setStartDate(null);
                                 setEndDate(null);
                             }}
+                            className="cursor-pointer border-border/50 text-muted-foreground hover:text-foreground"
                         >
                             Limpar período
                         </Button>

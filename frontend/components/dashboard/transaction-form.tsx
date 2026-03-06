@@ -170,7 +170,7 @@ export function TransactionForm({ onSubmit, isSubmitting, initialData, globalCat
                                 <PopoverTrigger asChild>
                                     <Button
                                         variant="outline"
-                                        className={cn("w-full justify-start text-left font-normal bg-secondary border-border/50 hover:bg-secondary/80")}
+                                        className={cn("cursor-pointer w-full justify-start text-left font-normal bg-secondary border-border/50 hover:bg-secondary/80")}
                                         disabled={isSubmitting}
                                     >
                                         <CalendarIcon className="mr-2 h-4 w-4" />
@@ -199,7 +199,7 @@ export function TransactionForm({ onSubmit, isSubmitting, initialData, globalCat
 
                     {error && <p className="text-sm text-destructive">{error}</p>}
 
-                    <Button type="submit" disabled={isSubmitting} className="w-full md:w-auto bg-primary text-primary-foreground hover:bg-primary/90">
+                    <Button type="submit" disabled={isSubmitting} className="cursor-pointer w-full md:w-auto bg-primary text-primary-foreground hover:bg-primary/90">
                         {isSubmitting ? (
                             <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

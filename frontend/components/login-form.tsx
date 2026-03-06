@@ -74,7 +74,7 @@ export function LoginForm() {
                     <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-4 text-muted-foreground hover:text-accent transition-colors z-10 focus:outline-none"
+                        className="cursor-pointer absolute right-4 text-muted-foreground hover:text-accent transition-colors z-10 focus:outline-none"
                         aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
                     >
                         {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -91,7 +91,7 @@ export function LoginForm() {
             <Button
                 type="submit"
                 disabled={loading}
-                className="h-12 w-full bg-gradient-to-r from-primary to-[#3a56ff] hover:opacity-90 text-white font-bold rounded-xl transition-all hover:scale-[1.01] active:scale-[0.98] shadow-lg shadow-primary/20 mt-2"
+                className="cursor-pointer h-12 w-full bg-gradient-to-r from-primary to-[#3a56ff] hover:opacity-90 text-white font-bold rounded-xl transition-all hover:scale-[1.01] active:scale-[0.98] shadow-lg shadow-primary/20 mt-2"
                 size="lg"
             >
                 {loading ? (

@@ -99,7 +99,7 @@ export function RegisterForm() {
                     <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-accent transition-colors"
+                        className="cursor-pointer absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-accent transition-colors"
                         aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
                     >
                         {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -124,7 +124,7 @@ export function RegisterForm() {
                     <button
                         type="button"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-accent transition-colors"
+                        className="cursor-pointer absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-accent transition-colors"
                         aria-label={showConfirmPassword ? "Ocultar senha" : "Mostrar senha"}
                     >
                         {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -141,7 +141,7 @@ export function RegisterForm() {
             <Button
                 type="submit"
                 disabled={loading}
-                className="h-11 w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-sm tracking-wide transition-all active:scale-[0.98]"
+                className="cursor-pointer h-11 w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-sm tracking-wide transition-all active:scale-[0.98]"
                 size="lg"
             >
                 {loading ? (

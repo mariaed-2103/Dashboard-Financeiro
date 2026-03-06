@@ -122,7 +122,7 @@ export function TransactionList({ transactions, isLoading, error, onEdit, onDele
                         {transactions.length > 0 && (
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" size="sm" className="gap-2 border-border/50 text-muted-foreground hover:text-foreground">
+                                    <Button variant="outline" size="sm" className="cursor-pointer gap-2 border-border/50 text-muted-foreground hover:text-foreground">
                                         <Download className="h-4 w-4" />
                                         Exportar
                                     </Button>
@@ -202,7 +202,7 @@ export function TransactionList({ transactions, isLoading, error, onEdit, onDele
                                                             <Button
                                                                 variant="ghost"
                                                                 size="icon"
-                                                                className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-secondary"
+                                                                className="cursor-pointer h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-secondary"
                                                                 onClick={() => onEdit(t)}
                                                             >
                                                                 <Pencil className="h-4 w-4" />
@@ -216,7 +216,7 @@ export function TransactionList({ transactions, isLoading, error, onEdit, onDele
                                                             <Button
                                                                 variant="ghost"
                                                                 size="icon"
-                                                                className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                                                className="cursor-pointer h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                                                                 onClick={() => setDeleteTarget(t)}
                                                             >
                                                                 <Trash2 className="h-4 w-4" />

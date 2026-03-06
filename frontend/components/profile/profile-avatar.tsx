@@ -95,7 +95,7 @@ export function ProfileAvatar({ name, profileImageUrl, onAvatarUpdated }: Profil
                     variant="outline"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isUploading}
-                    className="gap-2 border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted"
+                    className="cursor-pointer gap-2 border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted"
                 >
                     <Camera className="size-4" />
                     {isUploading ? "Enviando..." : "Alterar foto"}

@@ -77,7 +77,7 @@ export function ProfileForm({ name, email, onNameUpdated }: ProfileFormProps) {
                     <Button
                         type="submit"
                         disabled={isSaving || !hasChanges || !isValid}
-                        className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 self-end"
+                        className="cursor-pointer gap-2 bg-primary text-primary-foreground hover:bg-primary/90 self-end"
                     >
                         {isSaving ? (
                             <Loader2 className="size-4 animate-spin" />

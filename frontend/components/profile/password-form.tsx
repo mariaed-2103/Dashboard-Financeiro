@@ -72,7 +72,7 @@ export function PasswordForm() {
                             <button
                                 type="button"
                                 onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                className="cursor-pointer absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                                 aria-label={showCurrentPassword ? "Ocultar senha" : "Mostrar senha"}
                             >
                                 {showCurrentPassword ? (
@@ -100,7 +100,7 @@ export function PasswordForm() {
                             <button
                                 type="button"
                                 onClick={() => setShowNewPassword(!showNewPassword)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                className="cursor-pointer absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                                 aria-label={showNewPassword ? "Ocultar senha" : "Mostrar senha"}
                             >
                                 {showNewPassword ? (
@@ -132,7 +132,7 @@ export function PasswordForm() {
                             <button
                                 type="button"
                                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                className="cursor-pointer absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                                 aria-label={showConfirmPassword ? "Ocultar senha" : "Mostrar senha"}
                             >
                                 {showConfirmPassword ? (
@@ -150,7 +150,7 @@ export function PasswordForm() {
                     <Button
                         type="submit"
                         disabled={isSaving || !isValid}
-                        className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 self-end"
+                        className="cursor-pointer gap-2 bg-primary text-primary-foreground hover:bg-primary/90 self-end"
                     >
                         {isSaving ? (
                             <Loader2 className="size-4 animate-spin" />

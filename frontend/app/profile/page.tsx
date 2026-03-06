@@ -82,7 +82,7 @@ export default function ProfilePage() {
                     <Button
                         variant="ghost"
                         onClick={() => router.push("/")}
-                        className="gap-2 text-muted-foreground hover:text-foreground hover:bg-muted"
+                        className="cursor-pointer gap-2 text-muted-foreground hover:text-foreground hover:bg-muted"
                     >
                         <ArrowLeft className="size-4" />
                         Voltar
@@ -90,7 +90,7 @@ export default function ProfilePage() {
                     <Button
                         variant="ghost"
                         onClick={handleLogout}
-                        className="gap-2 text-muted-foreground hover:text-foreground hover:bg-muted"
+                        className="cursor-pointer gap-2 text-muted-foreground hover:text-foreground hover:bg-muted"
                     >
                         <LogOut className="size-4" />
                         Sair
@@ -146,7 +146,7 @@ export default function ProfilePage() {
                         <p className="text-muted-foreground mb-4">{error}</p>
                         <Button
                             onClick={loadProfile}
-                            className="bg-primary text-primary-foreground hover:bg-primary/90"
+                            className="cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90"
                         >
                             Tentar novamente
                         </Button>
@@ -172,7 +172,7 @@ export default function ProfilePage() {
                             <Button
                                 variant="outline"
                                 onClick={handleLogout}
-                                className="w-full gap-2 border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                                className="cursor-pointer w-full gap-2 border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors"
                             >
                                 <LogOut className="size-4" />
                                 Sair da conta

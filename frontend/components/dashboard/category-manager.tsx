@@ -114,7 +114,7 @@ export function CategoryManager({ customCategories, onCategoryChange }: Category
                     <Button
                         type="submit"
                         disabled={isCreating || !newCategoryName.trim() || customCategories.length >= 20}
-                        className="gap-2"
+                        className="cursor-pointer gap-2"
                     >
                         {isCreating ? (
                             <Loader2 className="size-4 animate-spin" />
@@ -180,7 +180,7 @@ export function CategoryManager({ customCategories, onCategoryChange }: Category
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="size-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                                        className="cursor-pointer size-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
                                         onClick={() => handleDelete(cat.id, cat.name)}
                                         disabled={deletingId === cat.id}
                                     >
