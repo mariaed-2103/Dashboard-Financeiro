@@ -33,12 +33,12 @@ export function LoginForm() {
         }
     }
 
+    const inputClasses = "pl-10 h-11 bg-background/40 border-border focus:border-accent/50 focus:ring-2 focus:ring-accent/20 transition-all duration-300 text-foreground placeholder:text-muted-foreground"
+
     return (
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             <div className="flex flex-col gap-2">
-                <Label htmlFor="email" className="text-foreground/80">
-                    Email
-                </Label>
+                <Label htmlFor="email" className="text-foreground/80">Email</Label>
                 <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                     <Input
@@ -47,16 +47,14 @@ export function LoginForm() {
                         placeholder="seu@email.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="pl-10 h-11 bg-muted/50 border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-accent focus-visible:border-accent"
+                        className={inputClasses}
                         required
                     />
                 </div>
             </div>
 
             <div className="flex flex-col gap-2">
-                <Label htmlFor="password" className="text-foreground/80">
-                    Senha
-                </Label>
+                <Label htmlFor="password" className="text-foreground/80">Senha</Label>
                 <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                     <Input
@@ -65,13 +63,13 @@ export function LoginForm() {
                         placeholder="Sua senha"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="pl-10 pr-10 h-11 bg-muted/50 border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-accent focus-visible:border-accent"
+                        className={`${inputClasses} pr-10`}
                         required
                     />
                     <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-accent transition-colors"
                         aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
                     >
                         {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -80,7 +78,7 @@ export function LoginForm() {
             </div>
 
             {error && (
-                <div className="rounded-md bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive">
+                <div className="rounded-md bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive animate-in fade-in slide-in-from-top-1">
                     {error}
                 </div>
             )}
@@ -88,12 +86,12 @@ export function LoginForm() {
             <Button
                 type="submit"
                 disabled={loading}
-                className="h-11 w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-sm tracking-wide"
+                className="h-11 w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-sm tracking-wide transition-all active:scale-[0.98]"
                 size="lg"
             >
                 {loading ? (
                     <>
-                        <Loader2 className="size-4 animate-spin" />
+                        <Loader2 className="size-4 animate-spin mr-2" />
                         Entrando...
                     </>
                 ) : (

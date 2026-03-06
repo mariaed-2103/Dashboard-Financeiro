@@ -1,13 +1,15 @@
 import { RegisterForm } from "@/components/register-form"
 import { AuthSidePanel } from "@/components/auth-side-panel"
+import { BackgroundAnimate } from "@/components/ui/BackgroundAnimate"
 
 export default function RegisterPage() {
     return (
-        <div className="grid min-h-svh lg:grid-cols-2">
+        <div className="relative grid min-h-svh lg:grid-cols-2 overflow-hidden">
+            <BackgroundAnimate />
             <AuthSidePanel />
 
-            <main className="flex items-center justify-center bg-background px-6 py-12">
-                <div className="w-full max-w-sm flex flex-col gap-8">
+            <main className="z-10 flex items-center justify-center px-6 py-12">
+                <div className="w-full max-w-md backdrop-blur-xl bg-card/30 border border-white/10 p-8 rounded-2xl shadow-2xl flex flex-col gap-8">
                     <div className="flex flex-col gap-2 text-center lg:text-left">
                         <div className="flex items-center gap-3 lg:hidden mb-4 justify-center">
                             <div className="size-9 rounded-lg bg-accent/20 flex items-center justify-center">
@@ -24,7 +26,7 @@ export default function RegisterPage() {
                             </div>
                             <span className="text-lg font-bold text-foreground">FinanceDash</span>
                         </div>
-                        <h2 className="text-2xl font-bold tracking-tight text-foreground text-balance">
+                        <h2 className="text-3xl font-extrabold tracking-tight bg-gradient-to-br from-foreground to-muted-foreground bg-clip-text text-transparent">
                             Crie sua conta
                         </h2>
                         <p className="text-sm text-muted-foreground text-balance">
