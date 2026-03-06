@@ -386,13 +386,14 @@ export default function DashboardPage() {
     // Categorias globais da API para exibir no filtro com id
     const globalCategoryOptions = globalCategories.map((c) => ({
         value: c.id,
-        label: c.name,
+        label: CATEGORY_LABELS[c.name.toUpperCase() as Category] || c.name,
     }));
 
-    // Mapa de todas as categorias: id -> name (globais + custom)
+    // Mapa de todas as categorias: id -> nome resolvido (globais com acento + custom)
     const allCategoriesMap = new Map<string, string>();
     for (const cat of globalCategories) {
-        allCategoriesMap.set(cat.id, cat.name);
+        const resolved = CATEGORY_LABELS[cat.name.toUpperCase() as Category] || cat.name;
+        allCategoriesMap.set(cat.id, resolved);
     }
     for (const cat of customCategories) {
         allCategoriesMap.set(cat.id, cat.name);
@@ -401,15 +402,19 @@ export default function DashboardPage() {
     const getCategoryName = (categoryIdOrName: string) => {
         // Primeiro procura pelo ID no mapa completo (globais + custom)
         const byId = allCategoriesMap.get(categoryIdOrName);
-        if (byId) return byId;
+        if (byId) {
+            // Se o nome retornado bate com uma chave global, usa o label com acento
+            const asLabel = CATEGORY_LABELS[byId.toUpperCase() as Category];
+            return asLabel || byId;
+        }
 
         // Fallback: procura pelo nome nas custom
         const customByName = customCategories.find(c => c.name === categoryIdOrName);
         if (customByName) return customByName.name;
 
         // Fallback: procura pelo enum nas globais (ex: "ALIMENTACAO")
-        if (CATEGORY_LABELS[categoryIdOrName as Category]) {
-            return CATEGORY_LABELS[categoryIdOrName as Category];
+        if (CATEGORY_LABELS[categoryIdOrName.toUpperCase() as Category]) {
+            return CATEGORY_LABELS[categoryIdOrName.toUpperCase() as Category];
         }
 
         return categoryIdOrName || "Sem categoria";
@@ -516,7 +521,7 @@ export default function DashboardPage() {
                             {/* Use apenas o que vem do banco (globalCategories + customCategories) */}
                             {globalCategories.map((cat) => (
                                 <SelectItem key={cat.id} value={cat.id}>
-                                    {cat.name}
+                                    {CATEGORY_LABELS[cat.name.toUpperCase() as Category] || cat.name}
                                 </SelectItem>
                             ))}
                             {customCategories.map((cat) => (

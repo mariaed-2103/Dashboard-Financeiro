@@ -5,11 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, FileText, TrendingUp, TrendingDown, Pencil, Trash2 } from "lucide-react";
+import { Loader2, FileText, TrendingUp, TrendingDown, Pencil, Trash2, Download, Sheet } from "lucide-react";
 import type { Transaction } from "@/types/transaction";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import {
     AlertDialog,
@@ -53,14 +54,92 @@ export function TransactionList({ transactions, isLoading, error, onEdit, onDele
         }
     };
 
+    const exportCSV = () => {
+        const headers = ["Data", "Descrição", "Categoria", "Tipo", "Valor (R$)"];
+        const rows = transactions.map((t) => [
+            formatDate(t.date),
+            `"${t.description.replace(/"/g, '""')}"`,
+            `"${getCategoryName(t.categoryId)}"`,
+            t.type === "INCOME" ? "Receita" : "Despesa",
+            (t.type === "INCOME" ? t.amount : -t.amount).toFixed(2).replace(".", ","),
+        ]);
+        const csv = [headers.join(";"), ...rows.map((r) => r.join(";"))].join("\n");
+        const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `transacoes_${format(new Date(), "yyyy-MM-dd")}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    const exportExcel = () => {
+        const headers = ["Data", "Descrição", "Categoria", "Tipo", "Valor (R$)"];
+        const rows = transactions.map((t) => [
+            formatDate(t.date),
+            t.description,
+            getCategoryName(t.categoryId),
+            t.type === "INCOME" ? "Receita" : "Despesa",
+            (t.type === "INCOME" ? t.amount : -t.amount).toFixed(2).replace(".", ","),
+        ]);
+
+        // Gera XML do Excel (SpreadsheetML) sem dependência externa
+        const xmlRows = [headers, ...rows]
+            .map((row) =>
+                `<Row>${row
+                    .map((cell) => `<Cell><Data ss:Type="String">${String(cell).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</Data></Cell>`)
+                    .join("")}</Row>`
+            )
+            .join("");
+
+        const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+  <Worksheet ss:Name="Transações">
+    <Table>${xmlRows}</Table>
+  </Worksheet>
+</Workbook>`;
+
+        const blob = new Blob([xml], { type: "application/vnd.ms-excel;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `transacoes_${format(new Date(), "yyyy-MM-dd")}.xls`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
     return (
         <>
             <Card className="border-border/50">
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                        <FileText className="h-5 w-5 text-primary" />
-                        Transações Recentes
-                    </CardTitle>
+                    <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2 text-lg">
+                            <FileText className="h-5 w-5 text-primary" />
+                            Transações Recentes
+                        </CardTitle>
+                        {transactions.length > 0 && (
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" size="sm" className="gap-2 border-border/50 text-muted-foreground hover:text-foreground">
+                                        <Download className="h-4 w-4" />
+                                        Exportar
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={exportCSV} className="gap-2 cursor-pointer">
+                                        <FileText className="h-4 w-4" />
+                                        Baixar CSV
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={exportExcel} className="gap-2 cursor-pointer">
+                                        <Sheet className="h-4 w-4" />
+                                        Baixar Excel (.xls)
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        )}
+                    </div>
                 </CardHeader>
                 <CardContent>
                     {error && <div className="flex items-center justify-center py-8"><p className="text-sm text-destructive">{error}</p></div>}
