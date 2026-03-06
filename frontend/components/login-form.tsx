@@ -33,14 +33,17 @@ export function LoginForm() {
         }
     }
 
-    const inputClasses = "pl-10 h-11 bg-background/40 border-border focus:border-accent/50 focus:ring-2 focus:ring-accent/20 transition-all duration-300 text-foreground placeholder:text-muted-foreground"
+    // pl-11 garante que o texto comece após o ícone
+    const inputClasses = "pl-11 h-12 bg-white/[0.05] border-white/10 focus:border-accent/40 focus:ring-accent/10 transition-all duration-300 text-white placeholder:text-muted-foreground/50 rounded-xl w-full"
 
     return (
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             <div className="flex flex-col gap-2">
-                <Label htmlFor="email" className="text-foreground/80">Email</Label>
-                <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                <Label htmlFor="email" className="text-white/70 ml-1 text-xs uppercase tracking-wider font-semibold">
+                    Email
+                </Label>
+                <div className="relative flex items-center">
+                    <Mail className="absolute left-4 size-4 text-muted-foreground z-10" />
                     <Input
                         id="email"
                         type="email"
@@ -54,22 +57,24 @@ export function LoginForm() {
             </div>
 
             <div className="flex flex-col gap-2">
-                <Label htmlFor="password" className="text-foreground/80">Senha</Label>
-                <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                <Label htmlFor="password" className="text-white/70 ml-1 text-xs uppercase tracking-wider font-semibold">
+                    Senha
+                </Label>
+                <div className="relative flex items-center">
+                    <Lock className="absolute left-4 size-4 text-muted-foreground z-10" />
                     <Input
                         id="password"
                         type={showPassword ? "text" : "password"}
                         placeholder="Sua senha"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className={`${inputClasses} pr-10`}
+                        className={`${inputClasses} pr-12`}
                         required
                     />
                     <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-accent transition-colors"
+                        className="absolute right-4 text-muted-foreground hover:text-accent transition-colors z-10 focus:outline-none"
                         aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
                     >
                         {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -78,7 +83,7 @@ export function LoginForm() {
             </div>
 
             {error && (
-                <div className="rounded-md bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive animate-in fade-in slide-in-from-top-1">
+                <div className="rounded-xl bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive animate-in fade-in slide-in-from-top-1 text-center font-medium">
                     {error}
                 </div>
             )}
@@ -86,24 +91,21 @@ export function LoginForm() {
             <Button
                 type="submit"
                 disabled={loading}
-                className="h-11 w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-sm tracking-wide transition-all active:scale-[0.98]"
+                className="h-12 w-full bg-gradient-to-r from-primary to-[#3a56ff] hover:opacity-90 text-white font-bold rounded-xl transition-all hover:scale-[1.01] active:scale-[0.98] shadow-lg shadow-primary/20 mt-2"
                 size="lg"
             >
                 {loading ? (
-                    <>
-                        <Loader2 className="size-4 animate-spin mr-2" />
-                        Entrando...
-                    </>
+                    <Loader2 className="size-5 animate-spin" />
                 ) : (
                     "Entrar"
                 )}
             </Button>
 
-            <p className="text-center text-sm text-muted-foreground">
+            <p className="text-center text-sm text-muted-foreground mt-2">
                 {"Ainda não tem conta? "}
                 <Link
                     href="/register"
-                    className="text-accent hover:text-accent/80 font-medium transition-colors"
+                    className="text-accent hover:text-accent/80 font-semibold transition-colors underline-offset-4 hover:underline"
                 >
                     Cadastre-se
                 </Link>

@@ -1,17 +1,54 @@
-// components/ui/background-animate.tsx
+"use client"
+import { motion, useMotionValue, useSpring } from "framer-motion"
+import { useEffect } from "react"
+
 export function BackgroundAnimate() {
+    // Valores brutos da posição do mouse
+    const mouseX = useMotionValue(0)
+    const mouseY = useMotionValue(0)
+
+    // Adiciona suavização (mola) para o movimento parecer "caro/chique"
+    const springConfig = { damping: 50, stiffness: 200 }
+    const softX = useSpring(mouseX, springConfig)
+    const softY = useSpring(mouseY, springConfig)
+
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            // Centraliza o orbe no cursor (subtraindo metade do tamanho dele)
+            mouseX.set(e.clientX - 250)
+            mouseY.set(e.clientY - 250)
+        }
+
+        window.addEventListener("mousemove", handleMouseMove)
+        return () => window.removeEventListener("mousemove", handleMouseMove)
+    }, [mouseX, mouseY])
+
     return (
-        <div className="fixed inset-0 -z-10 overflow-hidden bg-background">
-            {/* Padrão de Pontos (Grid) */}
-            <div className="absolute inset-0 bg-grid-pattern opacity-[0.05]" />
+        <div className="fixed inset-0 -z-10 overflow-hidden bg-[#050507]">
+            {/* Orbe Principal (Segue o mouse com suavização) */}
+            <motion.div
+                className="absolute size-[500px] rounded-full bg-primary/50 blur-[120px]"
+                style={{
+                    x: softX,
+                    y: softY,
+                }}
+            />
 
-            {/* Esferas de Luz Animadas */}
-            <div className="absolute top-0 -left-4 w-72 h-72 bg-primary/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob" />
-            <div className="absolute top-0 -right-4 w-72 h-72 bg-accent/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000" />
-            <div className="absolute -bottom-8 left-20 w-72 h-72 bg-secondary/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000" />
+            {/* Orbe Secundário Estático (Pulsa no fundo) */}
+            <motion.div
+                animate={{
+                    scale: [1, 1.2, 1],
+                    opacity: [0.3, 0.5, 0.3]
+                }}
+                transition={{ duration: 8, repeat: Infinity }}
+                className="absolute top-[-10%] right-[-10%] size-[600px] rounded-full bg-accent/10 blur-[100px]"
+            />
 
-            {/* Overlay de Vinheta para foco central */}
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/50" />
+            {/* Efeito de Granulado (Opcional, dá um toque premium de papel/ruído) */}
+            <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+
+            {/* Grade de fundo sutil */}
+            <div className="absolute inset-0 bg-grid-pattern opacity-20" />
         </div>
     )
 }
