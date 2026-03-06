@@ -56,6 +56,7 @@ import {
 
 import { Toaster, toast } from "sonner";
 import { getToken, removeToken } from "@/services/auth";
+import { getUserProfile } from "@/services/api";
 import { LogOut, User, CalendarIcon, Settings2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -87,6 +88,31 @@ export default function DashboardPage() {
     const [globalCategories, setGlobalCategories] = useState<UserCategory[]>([]);
     const [customCategories, setCustomCategories] = useState<UserCategory[]>([]);
     const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
+
+    // --- Perfil do usuário para saudação ---
+    const [userName, setUserName] = useState<string>("");
+
+    // Função para determinar a saudação baseada no horário
+    const getGreeting = () => {
+        const hour = new Date().getHours();
+        if (hour >= 5 && hour < 12) {
+            return "Bom dia";
+        } else if (hour >= 12 && hour < 18) {
+            return "Boa tarde";
+        } else {
+            return "Boa noite";
+        }
+    };
+
+    // Carregar perfil do usuário
+    const loadUserProfile = useCallback(async () => {
+        try {
+            const profile = await getUserProfile();
+            setUserName(profile.name);
+        } catch (err) {
+            // Silencioso — o nome é opcional para exibição
+        }
+    }, []);
 
     useEffect(() => {
         if (!getToken()) {
@@ -255,8 +281,9 @@ export default function DashboardPage() {
         if (!isCheckingAuth) {
             loadDashboardData();
             loadCategories();
+            loadUserProfile();
         }
-    }, [isCheckingAuth, loadDashboardData, loadCategories]);
+    }, [isCheckingAuth, loadDashboardData, loadCategories, loadUserProfile]);
 
     const handleCategoryChange = () => {
         loadCategories();
@@ -448,6 +475,18 @@ export default function DashboardPage() {
             </header>
 
             <main className="flex-1 container mx-auto px-4 py-8 flex flex-col gap-6">
+                {/* Saudação personalizada */}
+                {userName && (
+                    <div className="flex flex-col gap-1">
+                        <h2 className="text-2xl font-bold text-foreground">
+                            {getGreeting()}, {userName}!
+                        </h2>
+                        <p className="text-muted-foreground">
+                            Veja o resumo das suas finanças
+                        </p>
+                    </div>
+                )}
+
                 {/* Filtro */}
                 <div className="flex flex-wrap items-center gap-4">
                     <Select

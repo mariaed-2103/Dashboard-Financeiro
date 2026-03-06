@@ -30,19 +30,19 @@ export interface UserProfile {
 }
 
 export async function getUserProfile(): Promise<UserProfile> {
+    const token = getToken()
+
     const res = await fetch(`${API_BASE_URL}/users/me`, {
-        method: "GET",
-        headers: getAuthHeaders(),
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
     })
 
     if (!res.ok) {
-        if (res.status === 401) {
-            const error = new Error("N\u00e3o autorizado") as Error & { status: number }
-            error.status = 401
-            throw error
-        }
-        const errorText = await res.text()
-        throw new Error(errorText || "Erro ao buscar perfil")
+        const error = new Error("Erro ao buscar perfil") as Error & { status?: number }
+        error.status = res.status
+        throw error
     }
 
     return res.json()
