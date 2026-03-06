@@ -1,18 +1,19 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import type { CategorySummary } from "@/types/transaction"
+import type { CategorySummary, UserCategory } from "@/types/transaction"
 import { resolveCategoryName } from "@/utils/category-utils"
 
 interface Props {
     data: CategorySummary[]
     isLoading: boolean
     error?: string | null
+    userCategories?: UserCategory[]
 }
 
 function formatCurrency(value: number) {
     return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
 }
 
-export function CategorySummaryList({ data, isLoading, error }: Props) {
+export function CategorySummaryList({ data, isLoading, error, userCategories }: Props) {
     if (isLoading) {
         return (
             <Card className="border-border/50 animate-pulse">
@@ -66,7 +67,7 @@ export function CategorySummaryList({ data, isLoading, error }: Props) {
                             className="flex items-center justify-between py-2 border-b border-border/30 last:border-0"
                         >
               <span className="text-sm font-medium text-foreground">
-                {resolveCategoryName(item)}
+                {resolveCategoryName(item, userCategories)}
               </span>
                             <div className="flex items-center gap-4 text-sm">
                                 {item.income > 0 && (

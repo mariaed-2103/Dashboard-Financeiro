@@ -412,6 +412,9 @@ export default function DashboardPage() {
         return categoryIdOrName || "Sem categoria";
     };
 
+    // Combinar globalCategories e customCategories para passar aos componentes de gráfico
+    const allUserCategories: UserCategory[] = [...globalCategories, ...customCategories];
+
     return (
         <div className="min-h-svh bg-background flex flex-col">
             <Toaster position="top-right" />
@@ -640,11 +643,11 @@ export default function DashboardPage() {
                 <SummaryCards summary={summary} isLoading={isLoading} error={error} />
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <CategoryPieChart data={categorySummary} type="expense" />
-                    <CategoryBarChart data={categorySummary} />
+                    <CategoryPieChart data={categorySummary} type="expense" userCategories={allUserCategories} />
+                    <CategoryBarChart data={categorySummary} userCategories={allUserCategories} />
                 </div>
 
-                <CategorySummaryList data={categorySummary} isLoading={isLoading} error={error} />
+                <CategorySummaryList data={categorySummary} isLoading={isLoading} error={error} userCategories={allUserCategories} />
 
                 <TransactionForm
                     onSubmit={handleSaveTransaction}
@@ -666,7 +669,7 @@ export default function DashboardPage() {
 
             <footer className="border-t border-border/50 bg-card mt-auto">
                 <div className="container mx-auto px-4 py-4 text-center text-sm text-muted-foreground">
-                    {"Clarus \u00A9 2026 \u2014 Dados claros, decisões melhores"}
+                    {"Clarus © 2026 — Dados claros, decisões melhores"}
                 </div>
             </footer>
         </div>

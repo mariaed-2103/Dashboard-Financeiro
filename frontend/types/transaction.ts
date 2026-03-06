@@ -52,12 +52,14 @@ export type CategorySummary =
     | {
     type: "global"
     category: Category
+    categoryName?: string
     income: number
     expense: number
 }
     | {
     type: "custom"
     category: string
+    categoryName?: string
     income: number
     expense: number
 }

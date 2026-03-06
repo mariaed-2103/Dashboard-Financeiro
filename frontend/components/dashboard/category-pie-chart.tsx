@@ -9,12 +9,13 @@ import {
     Legend,
 } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import type { CategorySummary } from "@/types/transaction"
+import type { CategorySummary, UserCategory } from "@/types/transaction"
 import { resolveCategoryName } from "@/utils/category-utils"
 
 interface Props {
     data: CategorySummary[]
     type: "expense" | "income"
+    userCategories?: UserCategory[]
 }
 
 const EXPENSE_COLORS = [
@@ -67,14 +68,14 @@ function CustomLegend({ payload }: { payload?: LegendEntry[] }) {
     )
 }
 
-export function CategoryPieChart({ data, type }: Props) {
+export function CategoryPieChart({ data, type, userCategories }: Props) {
     const colors = type === "expense" ? EXPENSE_COLORS : INCOME_COLORS
     const title = type === "expense" ? "Despesas por Categoria" : "Receitas por Categoria"
 
     const chartData = data
         .filter((item) => (type === "expense" ? item.expense > 0 : item.income > 0))
         .map((item) => ({
-            name: resolveCategoryName(item),
+            name: resolveCategoryName(item, userCategories),
             value: type === "expense" ? item.expense : item.income,
         }))
 

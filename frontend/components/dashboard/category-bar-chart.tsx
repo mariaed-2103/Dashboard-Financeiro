@@ -11,11 +11,12 @@ import {
     Legend,
 } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import type { CategorySummary } from "@/types/transaction"
+import type { CategorySummary, UserCategory } from "@/types/transaction"
 import { resolveCategoryName } from "@/utils/category-utils"
 
 interface Props {
     data: CategorySummary[]
+    userCategories?: UserCategory[]
 }
 
 function formatCurrency(value: number) {
@@ -43,11 +44,11 @@ function CustomLegend() {
     )
 }
 
-export function CategoryBarChart({ data }: Props) {
+export function CategoryBarChart({ data, userCategories }: Props) {
     const chartData = data
         .filter((item) => item.income > 0 || item.expense > 0)
         .map((item) => ({
-            name: resolveCategoryName(item),
+            name: resolveCategoryName(item, userCategories),
             Receitas: item.income,
             Despesas: item.expense,
         }))

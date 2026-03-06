@@ -38,7 +38,7 @@ export async function getTransactionSummary(): Promise<TransactionSummary> {
 
 export async function getTransactionsByCategory(category: Category): Promise<Transaction[]> {
     const res = await fetch(
-        `${API_BASE_URL}/transactions/by-category?category=${category}`,
+        `${API_BASE_URL}/transactions/by-category?categoryId=${category}`,
         {
             headers: getAuthHeaders(),
         }
