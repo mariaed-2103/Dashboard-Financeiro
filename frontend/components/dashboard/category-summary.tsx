@@ -62,9 +62,9 @@ export function CategorySummaryList({ data, isLoading, error, userCategories, is
             </CardHeader>
             <CardContent>
                 <div className="space-y-3">
-                    {activeData.map((item) => (
+                    {activeData.map((item, index) => (
                         <div
-                            key={item.category}
+                            key={`${item.category}-${index}`}
                             className="flex items-center justify-between py-2 border-b border-border/30 last:border-0"
                         >
               <span className="text-sm font-medium text-foreground">

@@ -400,6 +400,9 @@ export default function DashboardPage() {
     }
 
     const getCategoryName = (categoryIdOrName: string) => {
+        // 1. Defesa: Se for nulo, vazio ou indefinido, retorna um fallback imediatamente
+        if (!categoryIdOrName) return "Sem categoria";
+
         // Primeiro procura pelo ID no mapa completo (globais + custom)
         const byId = allCategoriesMap.get(categoryIdOrName);
         if (byId) {
@@ -413,11 +416,13 @@ export default function DashboardPage() {
         if (customByName) return customByName.name;
 
         // Fallback: procura pelo enum nas globais (ex: "ALIMENTACAO")
-        if (CATEGORY_LABELS[categoryIdOrName.toUpperCase() as Category]) {
-            return CATEGORY_LABELS[categoryIdOrName.toUpperCase() as Category];
+        // Adicionamos o check aqui também para garantir
+        const upperName = categoryIdOrName.toUpperCase() as Category;
+        if (CATEGORY_LABELS[upperName]) {
+            return CATEGORY_LABELS[upperName];
         }
 
-        return categoryIdOrName || "Sem categoria";
+        return categoryIdOrName;
     };
 
     // Combinar globalCategories e customCategories para passar aos componentes de gráfico
