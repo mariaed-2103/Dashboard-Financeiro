@@ -4,6 +4,8 @@ import com.finance_dashboard.ProjetoT1.config.AuthenticatedUser;
 import com.finance_dashboard.ProjetoT1.dto.*;
 import com.finance_dashboard.ProjetoT1.model.User;
 import com.finance_dashboard.ProjetoT1.repository.UserRepository;
+import com.finance_dashboard.ProjetoT1.security.CryptoUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -13,11 +15,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
 public class UserService {
+
+    @Autowired
+    private CryptoUtils cryptoUtils;
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -132,5 +138,30 @@ public class UserService {
                 user.getEmail(),
                 user.getProfileImageUrl()
         );
+    }
+
+    public User registerUser(User user) throws Exception {
+        // 1. Gerar chave única (User Key) de 256 bits (32 bytes)
+        byte[] rawKey = new byte[32];
+        new SecureRandom().nextBytes(rawKey);
+        String userKeyHex = bytesToHex(rawKey);
+
+        // 2. Criptografar a User Key com a Master Key
+        String encryptedKey = cryptoUtils.encrypt(userKeyHex);
+
+        // 3. Salvar
+        user.setEncryptedUserKey(encryptedKey);
+        // Lembre-se de codificar a senha também se já não estiver fazendo!
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        return userRepository.save(user);
+    }
+
+    // Método auxiliar para converter bytes para String Hexadecimal
+    private String bytesToHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
     }
 }

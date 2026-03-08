@@ -3,6 +3,7 @@ package com.finance_dashboard.ProjetoT1.model;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDateTime;
 
@@ -22,6 +23,9 @@ public class User {
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+
+    @Field("encrypted_user_key")
+    private String encryptedUserKey;
 
     protected User() {}
 
@@ -87,6 +91,14 @@ public class User {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public void setEncryptedUserKey(String encryptedUserKey) {
+        this.encryptedUserKey = encryptedUserKey;
+    }
+
+    public String getEncryptedUserKey() {
+        return encryptedUserKey;
     }
 
 }

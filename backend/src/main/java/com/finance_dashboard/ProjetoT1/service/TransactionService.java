@@ -7,8 +7,13 @@ import com.finance_dashboard.ProjetoT1.dto.TransactionRequestDTO;
 import com.finance_dashboard.ProjetoT1.model.Category;
 import com.finance_dashboard.ProjetoT1.model.Transaction;
 import com.finance_dashboard.ProjetoT1.model.TransactionType;
+import com.finance_dashboard.ProjetoT1.model.User;
 import com.finance_dashboard.ProjetoT1.repository.CategoryRepository;
 import com.finance_dashboard.ProjetoT1.repository.TransactionRepository;
+import com.finance_dashboard.ProjetoT1.repository.UserRepository;
+import com.finance_dashboard.ProjetoT1.security.DataCrypto;
+import com.finance_dashboard.ProjetoT1.security.UserKeyService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -22,6 +27,11 @@ import java.util.Map;
 @Service
 public class TransactionService {
 
+    @Autowired
+    private UserKeyService userKeyService;
+    @Autowired
+    private UserRepository userRepository;
+
     private final TransactionRepository transactionRepository;
     private final CategoryRepository categoryRepository;
 
@@ -34,38 +44,49 @@ public class TransactionService {
     }
 
     public Transaction create(TransactionRequestDTO dto) {
-
         validateTransaction(dto);
-
         String userEmail = AuthenticatedUser.getEmail();
 
-        Category category = categoryRepository.findById(dto.getCategoryId())
-                .filter(c -> c.isActive() && (c.getUserEmail() == null || c.getUserEmail().equals(userEmail)))
-                .orElseThrow(() -> new IllegalArgumentException("Categoria não encontrada"));
+        // 1. Buscar o usuário completo para ter acesso à encryptedUserKey
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
-        Transaction transaction = new Transaction(
-                dto.getDescription(),
-                dto.getAmount(),
-                dto.getType(),
-                dto.getCategoryId(),
-                dto.getDate()
-                        .atStartOfDay(ZoneOffset.UTC)
-                        .toInstant()
-        );
+        try {
+            // 2. Recuperar a chave do usuário (descriptografada pela Master Key)
+            String userKey = userKeyService.getUserKey(user);
 
-        Instant now = Instant.now();
+            // 3. Criptografar a descrição antes de salvar
+            String encryptedDescription = DataCrypto.encryptWithUserKey(dto.getDescription(), userKey);
 
-        transaction.setUserEmail(userEmail);
-        transaction.setCreatedAt(now);
-        transaction.setUpdatedAt(now);
+            Category category = categoryRepository.findById(dto.getCategoryId())
+                    .filter(c -> c.isActive() && (c.getUserEmail() == null || c.getUserEmail().equals(userEmail)))
+                    .orElseThrow(() -> new IllegalArgumentException("Categoria não encontrada"));
 
-        return transactionRepository.save(transaction);
+            Transaction transaction = new Transaction(
+                    encryptedDescription, // Usando a descrição criptografada
+                    dto.getAmount(),
+                    dto.getType(),
+                    dto.getCategoryId(),
+                    dto.getDate().atStartOfDay(ZoneOffset.UTC).toInstant()
+            );
+
+            Instant now = Instant.now();
+            transaction.setUserEmail(userEmail);
+            transaction.setCreatedAt(now);
+            transaction.setUpdatedAt(now);
+
+            return transactionRepository.save(transaction);
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao processar criptografia da transação", e);
+        }
     }
 
     public List<Transaction> findAll() {
         String userEmail = AuthenticatedUser.getEmail();
-        return transactionRepository
-                .findByUserEmailAndDeletedAtIsNull(userEmail);
+        List<Transaction> transactions = transactionRepository.findByUserEmailAndDeletedAtIsNull(userEmail);
+
+        decryptTransactions(transactions, userEmail); // Aplica a mágica aqui
+        return transactions;
     }
 
 
@@ -129,25 +150,28 @@ public class TransactionService {
                 .toInstant();
 
         String userEmail = AuthenticatedUser.getEmail();
+        List<Transaction> transactions = transactionRepository
+                .findByUserEmailAndDateBetweenAndDeletedAtIsNull(userEmail, start, end);
 
-        return transactionRepository
-                .findByUserEmailAndDateBetweenAndDeletedAtIsNull(
-                        userEmail,
-                        start,
-                        end
-                );
+        decryptTransactions(transactions, userEmail); // Aplica aqui também
+        return transactions;
     }
 
     public List<Transaction> findByCategory(String categoryId) {
-
         if (categoryId == null) {
             throw new IllegalArgumentException("Categoria é obrigatória");
         }
 
         String userEmail = AuthenticatedUser.getEmail();
 
-        return transactionRepository
+        // 1. Busca a lista no repositório
+        List<Transaction> transactions = transactionRepository
                 .findByUserEmailAndCategoryIdAndDeletedAtIsNull(userEmail, categoryId);
+
+        // 2. Descriptografa as descrições antes de retornar
+        decryptTransactions(transactions, userEmail);
+
+        return transactions;
     }
 
     public List<CategorySummaryDTO> getCategorySummary(int year, int month) {
@@ -283,7 +307,6 @@ public class TransactionService {
     }
 
     public List<Transaction> findByDateRange(Instant start, Instant end) {
-
         if (start == null || end == null) {
             throw new IllegalArgumentException("Intervalo inválido");
         }
@@ -294,12 +317,18 @@ public class TransactionService {
 
         String userEmail = AuthenticatedUser.getEmail();
 
-        return transactionRepository
+        // 1. Busca a lista no repositório
+        List<Transaction> transactions = transactionRepository
                 .findByUserEmailAndDateBetweenAndDeletedAtIsNull(
                         userEmail,
                         start,
                         end
                 );
+
+        // 2. Descriptografa as descrições antes de retornar
+        decryptTransactions(transactions, userEmail);
+
+        return transactions;
     }
 
     public SummaryResponseDTO getSummaryByDateRange(Instant start, Instant end) {
@@ -353,5 +382,36 @@ public class TransactionService {
                 .toList();
     }
 
+    private void decryptTransactions(List<Transaction> transactions, String userEmail) {
+        try {
+            User user = userRepository.findByEmail(userEmail)
+                    .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
+            // Se o usuário (como os antigos) não tiver chave ainda,
+            // apenas retornamos para exibir o texto puro que já existe no banco.
+            if (user.getEncryptedUserKey() == null) {
+                return;
+            }
+
+            String userKey = userKeyService.getUserKey(user);
+
+            transactions.forEach(t -> {
+                try {
+                    // Verificação crucial: o dado novo SEMPRE tem o caractere ":"
+                    // que separa o IV do conteúdo. Dados antigos não têm.
+                    if (t.getDescription() != null && t.getDescription().contains(":")) {
+                        String clearDescription = DataCrypto.decryptWithUserKey(t.getDescription(), userKey);
+                        t.setDescription(clearDescription);
+                    }
+                    // Se não cair no IF, a descrição permanece o texto original (suas despesas reais).
+                } catch (Exception e) {
+                    // Em caso de erro técnico na chave, protegemos o campo.
+                    t.setDescription("[Conteúdo Protegido]");
+                }
+            });
+        } catch (Exception e) {
+            // Log para debug no IntelliJ, mas não trava a aplicação para o usuário.
+            System.err.println("Aviso: Falha ao processar camada de segurança para " + userEmail);
+        }
+    }
 }
