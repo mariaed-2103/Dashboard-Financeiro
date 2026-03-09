@@ -16,9 +16,11 @@ public class Transaction {
 
     private String description;
 
-    private BigDecimal amount;
+    // Armazenado como String para suportar criptografia
+    private String amount;
 
-    private TransactionType type;
+    // Armazenado como String para suportar criptografia
+    private String type;
 
     private Instant date;
 
@@ -35,8 +37,8 @@ public class Transaction {
     public Transaction() {
     }
 
-    public Transaction(String description, BigDecimal amount,
-                       TransactionType type, String categoryId,
+    public Transaction(String description, String amount,
+                       String type, String categoryId,
                        Instant date) {
         this.description = description;
         this.amount = amount;
@@ -53,12 +55,26 @@ public class Transaction {
         return description;
     }
 
-    public BigDecimal getAmount() {
+    // Retorna o amount como String (pode estar criptografado ou em texto plano)
+    public String getAmount() {
         return amount;
     }
 
-    public TransactionType getType() {
+    // Conveniência: retorna BigDecimal após descriptografia
+    public BigDecimal getAmountAsDecimal() {
+        if (amount == null) return BigDecimal.ZERO;
+        return new BigDecimal(amount);
+    }
+
+    // Retorna o type como String (pode estar criptografado ou em texto plano)
+    public String getType() {
         return type;
+    }
+
+    // Conveniência: retorna o enum TransactionType após descriptografia
+    public TransactionType getTypeAsEnum() {
+        if (type == null) return null;
+        return TransactionType.valueOf(type);
     }
 
     public Instant getDate() {
@@ -69,17 +85,19 @@ public class Transaction {
         return categoryId;
     }
 
-    public String getUserEmail() {return userEmail;}
+    public String getUserEmail() {
+        return userEmail;
+    }
 
     public void setDescription(String description) {
         this.description = description;
     }
 
-    public void setAmount(BigDecimal amount) {
+    public void setAmount(String amount) {
         this.amount = amount;
     }
 
-    public void setType(TransactionType type) {
+    public void setType(String type) {
         this.type = type;
     }
 
@@ -91,7 +109,9 @@ public class Transaction {
         this.categoryId = categoryId;
     }
 
-    public void setUserEmail(String userEmail) {this.userEmail = userEmail;}
+    public void setUserEmail(String userEmail) {
+        this.userEmail = userEmail;
+    }
 
     public Instant getCreatedAt() {
         return createdAt;

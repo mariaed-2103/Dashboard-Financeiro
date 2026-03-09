@@ -313,8 +313,9 @@ export default function DashboardPage() {
         }
     };
 
-    const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const undoCancelledRef = useRef(false);
+    // Map para suportar múltiplas exclusões simultâneas sem conflito entre timers
+    const undoTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+    const undoCancelledRef = useRef<Set<string>>(new Set());
 
     const handleDeleteTransaction = async (id: string) => {
         const deletedTransaction = transactions.find((t) => t.id === id);
@@ -322,10 +323,13 @@ export default function DashboardPage() {
 
         setTransactions((prev) => prev.filter((t) => t.id !== id));
 
-        if (undoTimerRef.current) {
-            clearTimeout(undoTimerRef.current);
+        // Garante que não há timer anterior para este mesmo id
+        const existingTimer = undoTimersRef.current.get(id);
+        if (existingTimer) {
+            clearTimeout(existingTimer);
+            undoTimersRef.current.delete(id);
         }
-        undoCancelledRef.current = false;
+        undoCancelledRef.current.delete(id);
 
         toast("Transação excluída", {
             description: deletedTransaction.description,
@@ -333,9 +337,11 @@ export default function DashboardPage() {
             action: {
                 label: "Desfazer",
                 onClick: () => {
-                    undoCancelledRef.current = true;
-                    if (undoTimerRef.current) {
-                        clearTimeout(undoTimerRef.current);
+                    undoCancelledRef.current.add(id);
+                    const timer = undoTimersRef.current.get(id);
+                    if (timer) {
+                        clearTimeout(timer);
+                        undoTimersRef.current.delete(id);
                     }
                     setTransactions((prev) =>
                         [...prev, deletedTransaction].sort(
@@ -346,17 +352,23 @@ export default function DashboardPage() {
                 },
             },
             onDismiss: () => {
-                if (!undoCancelledRef.current) {
+                if (!undoCancelledRef.current.has(id)) {
                     performDelete(id);
                 }
+                undoCancelledRef.current.delete(id);
+                undoTimersRef.current.delete(id);
             },
         });
 
-        undoTimerRef.current = setTimeout(() => {
-            if (!undoCancelledRef.current) {
+        const timer = setTimeout(() => {
+            if (!undoCancelledRef.current.has(id)) {
                 performDelete(id);
             }
+            undoCancelledRef.current.delete(id);
+            undoTimersRef.current.delete(id);
         }, 6000);
+
+        undoTimersRef.current.set(id, timer);
     };
 
     const performDelete = async (id: string) => {

@@ -55,17 +55,19 @@ public class TransactionService {
             // 2. Recuperar a chave do usuário (descriptografada pela Master Key)
             String userKey = userKeyService.getUserKey(user);
 
-            // 3. Criptografar a descrição antes de salvar
+            // 3. Criptografar description, amount e type antes de salvar
             String encryptedDescription = DataCrypto.encryptWithUserKey(dto.getDescription(), userKey);
+            String encryptedAmount      = DataCrypto.encryptWithUserKey(dto.getAmount().toPlainString(), userKey);
+            String encryptedType        = DataCrypto.encryptWithUserKey(dto.getType().name(), userKey);
 
             Category category = categoryRepository.findById(dto.getCategoryId())
                     .filter(c -> c.isActive() && (c.getUserEmail() == null || c.getUserEmail().equals(userEmail)))
                     .orElseThrow(() -> new IllegalArgumentException("Categoria não encontrada"));
 
             Transaction transaction = new Transaction(
-                    encryptedDescription, // Usando a descrição criptografada
-                    dto.getAmount(),
-                    dto.getType(),
+                    encryptedDescription,
+                    encryptedAmount,
+                    encryptedType,
                     dto.getCategoryId(),
                     dto.getDate().atStartOfDay(ZoneOffset.UTC).toInstant()
             );
@@ -75,7 +77,13 @@ public class TransactionService {
             transaction.setCreatedAt(now);
             transaction.setUpdatedAt(now);
 
-            return transactionRepository.save(transaction);
+            Transaction saved = transactionRepository.save(transaction);
+
+            // Descriptografar antes de retornar ao controller (o Jackson não aceita
+            // campos criptografados onde espera valores numéricos/enum)
+            decryptTransactions(List.of(saved), userEmail);
+
+            return saved;
         } catch (Exception e) {
             throw new RuntimeException("Erro ao processar criptografia da transação", e);
         }
@@ -85,10 +93,9 @@ public class TransactionService {
         String userEmail = AuthenticatedUser.getEmail();
         List<Transaction> transactions = transactionRepository.findByUserEmailAndDeletedAtIsNull(userEmail);
 
-        decryptTransactions(transactions, userEmail); // Aplica a mágica aqui
+        decryptTransactions(transactions, userEmail);
         return transactions;
     }
-
 
     public SummaryResponseDTO getSummary() {
         String userEmail = AuthenticatedUser.getEmail();
@@ -96,14 +103,17 @@ public class TransactionService {
         List<Transaction> transactions =
                 transactionRepository.findByUserEmailAndDeletedAtIsNull(userEmail);
 
-        BigDecimal totalIncome = BigDecimal.ZERO;
+        // Descriptografar antes de usar amount e type
+        decryptTransactions(transactions, userEmail);
+
+        BigDecimal totalIncome  = BigDecimal.ZERO;
         BigDecimal totalExpense = BigDecimal.ZERO;
 
         for (Transaction transaction : transactions) {
-            if (transaction.getType() == TransactionType.INCOME) {
-                totalIncome = totalIncome.add(transaction.getAmount());
+            if (TransactionType.INCOME.name().equals(transaction.getType())) {
+                totalIncome = totalIncome.add(transaction.getAmountAsDecimal());
             } else {
-                totalExpense = totalExpense.add(transaction.getAmount());
+                totalExpense = totalExpense.add(transaction.getAmountAsDecimal());
             }
         }
 
@@ -153,7 +163,7 @@ public class TransactionService {
         List<Transaction> transactions = transactionRepository
                 .findByUserEmailAndDateBetweenAndDeletedAtIsNull(userEmail, start, end);
 
-        decryptTransactions(transactions, userEmail); // Aplica aqui também
+        decryptTransactions(transactions, userEmail);
         return transactions;
     }
 
@@ -164,11 +174,9 @@ public class TransactionService {
 
         String userEmail = AuthenticatedUser.getEmail();
 
-        // 1. Busca a lista no repositório
         List<Transaction> transactions = transactionRepository
                 .findByUserEmailAndCategoryIdAndDeletedAtIsNull(userEmail, categoryId);
 
-        // 2. Descriptografa as descrições antes de retornar
         decryptTransactions(transactions, userEmail);
 
         return transactions;
@@ -203,27 +211,29 @@ public class TransactionService {
                                 end
                         );
 
+        // Descriptografar antes de usar amount e type
+        decryptTransactions(transactions, userEmail);
+
         Map<String, BigDecimal[]> totals = new HashMap<>();
         for (Transaction transaction : transactions) {
             totals.putIfAbsent(transaction.getCategoryId(), new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO});
             BigDecimal[] values = totals.get(transaction.getCategoryId());
-            if (transaction.getType() == TransactionType.INCOME) {
-                values[0] = values[0].add(transaction.getAmount());
+            if (TransactionType.INCOME.name().equals(transaction.getType())) {
+                values[0] = values[0].add(transaction.getAmountAsDecimal());
             } else {
-                values[1] = values[1].add(transaction.getAmount());
+                values[1] = values[1].add(transaction.getAmountAsDecimal());
             }
         }
 
         return totals.entrySet().stream()
                 .map(e -> {
-                    // BUSCA O NOME DA CATEGORIA PELO ID
                     String categoryName = categoryRepository.findById(e.getKey())
                             .map(Category::getName)
                             .orElse("Sem categoria");
 
                     return new CategorySummaryDTO(
                             e.getKey(),
-                            categoryName, // Passa o nome para o DTO
+                            categoryName,
                             e.getValue()[0],
                             e.getValue()[1]
                     );
@@ -239,27 +249,29 @@ public class TransactionService {
 
         List<Transaction> transactions = transactionRepository.findByUserEmailAndDateBetweenAndDeletedAtIsNull(userEmail, start, end);
 
+        // Descriptografar antes de usar amount e type
+        decryptTransactions(transactions, userEmail);
+
         Map<String, BigDecimal[]> totals = new HashMap<>();
         for (Transaction t : transactions) {
             totals.putIfAbsent(t.getCategoryId(), new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO});
             BigDecimal[] values = totals.get(t.getCategoryId());
-            if (t.getType() == TransactionType.INCOME) {
-                values[0] = values[0].add(t.getAmount());
+            if (TransactionType.INCOME.name().equals(t.getType())) {
+                values[0] = values[0].add(t.getAmountAsDecimal());
             } else {
-                values[1] = values[1].add(t.getAmount());
+                values[1] = values[1].add(t.getAmountAsDecimal());
             }
         }
 
         return totals.entrySet().stream()
                 .map(e -> {
-                    // BUSCA O NOME DA CATEGORIA (Igual ao método que funcionou)
                     String categoryName = categoryRepository.findById(e.getKey())
                             .map(Category::getName)
                             .orElse("Sem categoria");
 
                     return new CategorySummaryDTO(
                             e.getKey(),
-                            categoryName, // Adicionado o 4º argumento aqui
+                            categoryName,
                             e.getValue()[0],
                             e.getValue()[1]
                     );
@@ -276,19 +288,36 @@ public class TransactionService {
 
         validateTransaction(dto);
 
-        // ✅ AJUSTE AQUI: Busca a categoria permitindo e-mail nulo (Global) ou e-mail do usuário (Custom)
         categoryRepository.findById(dto.getCategoryId())
                 .filter(c -> c.isActive() && (c.getUserEmail() == null || c.getUserEmail().equals(userEmail)))
                 .orElseThrow(() -> new IllegalArgumentException("Categoria não encontrada"));
 
-        transaction.setDescription(dto.getDescription());
-        transaction.setAmount(dto.getAmount());
-        transaction.setType(dto.getType());
-        transaction.setCategoryId(dto.getCategoryId());
-        transaction.setDate(Instant.parse(dto.getDate() + "T00:00:00Z"));
-        transaction.setUpdatedAt(Instant.now());
+        try {
+            // Buscar a chave do usuário para re-criptografar os campos
+            User user = userRepository.findByEmail(userEmail)
+                    .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+            String userKey = userKeyService.getUserKey(user);
 
-        return transactionRepository.save(transaction);
+            String encryptedDescription = DataCrypto.encryptWithUserKey(dto.getDescription(), userKey);
+            String encryptedAmount      = DataCrypto.encryptWithUserKey(dto.getAmount().toPlainString(), userKey);
+            String encryptedType        = DataCrypto.encryptWithUserKey(dto.getType().name(), userKey);
+
+            transaction.setDescription(encryptedDescription);
+            transaction.setAmount(encryptedAmount);
+            transaction.setType(encryptedType);
+            transaction.setCategoryId(dto.getCategoryId());
+            transaction.setDate(Instant.parse(dto.getDate() + "T00:00:00Z"));
+            transaction.setUpdatedAt(Instant.now());
+
+            Transaction saved = transactionRepository.save(transaction);
+
+            // Descriptografar antes de retornar ao controller
+            decryptTransactions(List.of(saved), userEmail);
+
+            return saved;
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao processar criptografia na atualização da transação", e);
+        }
     }
 
     public void delete(String id) {
@@ -317,7 +346,6 @@ public class TransactionService {
 
         String userEmail = AuthenticatedUser.getEmail();
 
-        // 1. Busca a lista no repositório
         List<Transaction> transactions = transactionRepository
                 .findByUserEmailAndDateBetweenAndDeletedAtIsNull(
                         userEmail,
@@ -325,7 +353,6 @@ public class TransactionService {
                         end
                 );
 
-        // 2. Descriptografa as descrições antes de retornar
         decryptTransactions(transactions, userEmail);
 
         return transactions;
@@ -333,16 +360,17 @@ public class TransactionService {
 
     public SummaryResponseDTO getSummaryByDateRange(Instant start, Instant end) {
 
+        // findByDateRange já chama decryptTransactions internamente
         List<Transaction> transactions = findByDateRange(start, end);
 
-        BigDecimal totalIncome = BigDecimal.ZERO;
+        BigDecimal totalIncome  = BigDecimal.ZERO;
         BigDecimal totalExpense = BigDecimal.ZERO;
 
         for (Transaction t : transactions) {
-            if (t.getType() == TransactionType.INCOME) {
-                totalIncome = totalIncome.add(t.getAmount());
+            if (TransactionType.INCOME.name().equals(t.getType())) {
+                totalIncome = totalIncome.add(t.getAmountAsDecimal());
             } else {
-                totalExpense = totalExpense.add(t.getAmount());
+                totalExpense = totalExpense.add(t.getAmountAsDecimal());
             }
         }
 
@@ -352,29 +380,29 @@ public class TransactionService {
     }
 
     public List<CategorySummaryDTO> getCategorySummaryByDateRange(Instant start, Instant end) {
+        // findByDateRange já chama decryptTransactions internamente
         List<Transaction> transactions = findByDateRange(start, end);
 
         Map<String, BigDecimal[]> totals = new HashMap<>();
         for (Transaction t : transactions) {
             totals.putIfAbsent(t.getCategoryId(), new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO});
             BigDecimal[] values = totals.get(t.getCategoryId());
-            if (t.getType() == TransactionType.INCOME) {
-                values[0] = values[0].add(t.getAmount());
+            if (TransactionType.INCOME.name().equals(t.getType())) {
+                values[0] = values[0].add(t.getAmountAsDecimal());
             } else {
-                values[1] = values[1].add(t.getAmount());
+                values[1] = values[1].add(t.getAmountAsDecimal());
             }
         }
 
         return totals.entrySet().stream()
                 .map(e -> {
-                    // BUSCA O NOME DA CATEGORIA (Igual ao método que funcionou)
                     String categoryName = categoryRepository.findById(e.getKey())
                             .map(Category::getName)
                             .orElse("Sem categoria");
 
                     return new CategorySummaryDTO(
                             e.getKey(),
-                            categoryName, // Adicionado o 4º argumento aqui
+                            categoryName,
                             e.getValue()[0],
                             e.getValue()[1]
                     );
@@ -397,20 +425,28 @@ public class TransactionService {
 
             transactions.forEach(t -> {
                 try {
-                    // Verificação crucial: o dado novo SEMPRE tem o caractere ":"
-                    // que separa o IV do conteúdo. Dados antigos não têm.
+                    // O dado criptografado SEMPRE contém ":" separando IV do conteúdo.
+                    // Dados antigos (plain text) não têm ":", então são mantidos como estão.
                     if (t.getDescription() != null && t.getDescription().contains(":")) {
-                        String clearDescription = DataCrypto.decryptWithUserKey(t.getDescription(), userKey);
-                        t.setDescription(clearDescription);
+                        t.setDescription(DataCrypto.decryptWithUserKey(t.getDescription(), userKey));
                     }
-                    // Se não cair no IF, a descrição permanece o texto original (suas despesas reais).
+
+                    if (t.getAmount() != null && t.getAmount().contains(":")) {
+                        t.setAmount(DataCrypto.decryptWithUserKey(t.getAmount(), userKey));
+                    }
+
+                    if (t.getType() != null && t.getType().contains(":")) {
+                        t.setType(DataCrypto.decryptWithUserKey(t.getType(), userKey));
+                    }
+
                 } catch (Exception e) {
-                    // Em caso de erro técnico na chave, protegemos o campo.
+                    // Em caso de erro técnico na chave, protegemos os campos.
                     t.setDescription("[Conteúdo Protegido]");
+                    t.setAmount("0");
+                    t.setType(TransactionType.EXPENSE.name());
                 }
             });
         } catch (Exception e) {
-            // Log para debug no IntelliJ, mas não trava a aplicação para o usuário.
             System.err.println("Aviso: Falha ao processar camada de segurança para " + userEmail);
         }
     }
