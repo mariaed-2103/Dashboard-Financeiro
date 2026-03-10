@@ -85,11 +85,26 @@ export async function deleteTransaction(id: string): Promise<void> {
 }
 
 async function parseError(res: Response) {
-    const text = await res.text()
-    const error = new Error(text || "Erro na requisi\u00e7\u00e3o") as Error & { status: number; statusCode: number }
-    error.status = res.status
-    error.statusCode = res.status
-    return error
+    let message = "Erro na requisição";
+
+    try {
+        const data = await res.json();
+        message = data.message || data.error || message;
+    } catch {
+        // Se não for JSON, tenta ler como texto
+        const text = await res.text();
+        if (text) message = text;
+    }
+
+    // Tratamento amigável para o Rate Limiting (Bucket4j)
+    if (res.status === 429) {
+        message = "Calma lá! Você está indo rápido demais. Tente novamente em instantes.";
+    }
+
+    const error = new Error(message) as Error & { status: number; statusCode: number };
+    error.status = res.status;
+    error.statusCode = res.status;
+    return error;
 }
 
 export async function getTransactionsByPeriod(

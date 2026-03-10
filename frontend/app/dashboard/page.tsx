@@ -10,6 +10,7 @@ import { CategoryPieChart } from "@/components/dashboard/category-pie-chart";
 import { CategoryBarChart } from "@/components/dashboard/category-bar-chart";
 import { CategorySummaryList } from "@/components/dashboard/category-summary";
 import { CategoryManager } from "@/components/dashboard/category-manager";
+import { QuickAdd } from "@/components/dashboard/quick-add";
 
 import {
     getTransactions,
@@ -146,6 +147,40 @@ export default function DashboardPage() {
         };
     }
 
+    // Localize o handleAdd e substitua por este:
+    const handleQuickAddTransaction = async (data: { amount: number; description: string; suggestedCategory: string | null }) => {
+        try {
+            // 1. Identifica o ID da categoria
+            const category = globalCategories.find(c => c.name.toLowerCase() === data.suggestedCategory?.toLowerCase());
+            const categoryId = category?.id || globalCategories[0]?.id;
+
+            // 2. Lógica de detecção de Tipo
+            // Se a categoria for "Salario" ou "Investimentos", ou se a descrição contiver palavras de entrada
+            const incomeKeywords = ["salario", "recebi", "venda", "pix", "rendimento", "bonus"];
+            const isIncome =
+                data.suggestedCategory === "Salario" ||
+                data.suggestedCategory === "Investimentos" ||
+                incomeKeywords.some(keyword => data.description.toLowerCase().includes(keyword));
+
+            const transactionData: TransactionFormData = {
+                description: data.description,
+                amount: data.amount,
+                type: isIncome ? "INCOME" : "EXPENSE", // Detecta automaticamente!
+                categoryId: categoryId,
+                date: format(new Date(), "yyyy-MM-dd"),
+            };
+
+            await handleSaveTransaction(transactionData);
+
+            // Feedback visual extra para o usuário
+            if (isIncome) {
+                toast.success(`Receita de ${data.description} adicionada! 💰`);
+            }
+        } catch (err) {
+            toast.error("Erro na entrada rápida.");
+        }
+    };
+
     const loadDashboardData = useCallback(async () => {
         setIsLoading(true);
         setError(null);
@@ -260,14 +295,13 @@ export default function DashboardPage() {
             setCategorySummary(catSum);
         } catch (err) {
             const apiError = err as ApiError;
-
             if ((apiError as any)?.status === 401) {
                 removeToken();
                 router.replace("/login");
                 return;
             }
-
             setError(apiError.message || "Erro ao carregar dados");
+            toast.error(apiError.message || "Não foi possível carregar os dados do dashboard"); // Adicione esta linha
         } finally {
             setIsLoading(false);
         }
@@ -513,6 +547,10 @@ export default function DashboardPage() {
             </header>
 
             <main className="flex-1 container mx-auto px-4 py-8 flex flex-col gap-6">
+
+                {/* Nova Barra de Entrada Rápida */}
+                <QuickAdd onAdd={handleQuickAddTransaction} />
+
                 {/* Saudação personalizada */}
                 {userName && (
                     <div className="flex flex-col gap-1">

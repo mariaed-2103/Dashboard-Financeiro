@@ -13,6 +13,8 @@ import com.finance_dashboard.ProjetoT1.repository.TransactionRepository;
 import com.finance_dashboard.ProjetoT1.repository.UserRepository;
 import com.finance_dashboard.ProjetoT1.security.DataCrypto;
 import com.finance_dashboard.ProjetoT1.security.UserKeyService;
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Safelist;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -55,8 +57,12 @@ public class TransactionService {
             // 2. Recuperar a chave do usuário (descriptografada pela Master Key)
             String userKey = userKeyService.getUserKey(user);
 
-            // 3. Criptografar description, amount e type antes de salvar
-            String encryptedDescription = DataCrypto.encryptWithUserKey(dto.getDescription(), userKey);
+            // --- NOVO: SANITIZAÇÃO COM JSOUP ---
+            // Remove qualquer tag HTML ou scripts maliciosos da descrição enviada pelo usuário
+            String cleanDescription = Jsoup.clean(dto.getDescription(), Safelist.none());
+
+            // 3. Criptografar description (agora limpa), amount e type antes de salvar
+            String encryptedDescription = DataCrypto.encryptWithUserKey(cleanDescription, userKey);
             String encryptedAmount      = DataCrypto.encryptWithUserKey(dto.getAmount().toPlainString(), userKey);
             String encryptedType        = DataCrypto.encryptWithUserKey(dto.getType().name(), userKey);
 
@@ -85,6 +91,8 @@ public class TransactionService {
 
             return saved;
         } catch (Exception e) {
+            // Log detalhado para te ajudar a identificar se o erro é na chave ou no banco
+            e.printStackTrace();
             throw new RuntimeException("Erro ao processar criptografia da transação", e);
         }
     }

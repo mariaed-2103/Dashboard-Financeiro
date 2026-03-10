@@ -5,6 +5,7 @@ import com.finance_dashboard.ProjetoT1.dto.SummaryResponseDTO;
 import com.finance_dashboard.ProjetoT1.dto.TransactionRequestDTO;
 import com.finance_dashboard.ProjetoT1.model.Transaction;
 import com.finance_dashboard.ProjetoT1.service.TransactionService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +24,7 @@ public class TransactionController {
     }
 
     @PostMapping
-    public ResponseEntity<Transaction> create(@RequestBody TransactionRequestDTO dto) {
+    public ResponseEntity<Transaction> create(@RequestBody @Valid TransactionRequestDTO dto) {
         Transaction savedTransaction = transactionService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedTransaction);
     }
@@ -70,7 +71,7 @@ public class TransactionController {
     @PutMapping("/{id}")
     public ResponseEntity<Transaction> updateTransaction(
             @PathVariable String id,
-            @RequestBody TransactionRequestDTO dto
+            @RequestBody @Valid TransactionRequestDTO dto
     ) {
         Transaction updated = transactionService.update(id, dto);
         return ResponseEntity.ok(updated);

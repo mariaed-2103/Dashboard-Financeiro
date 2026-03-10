@@ -37,6 +37,8 @@
     --sidebar-accent-foreground: #e8edf2;
     --sidebar-border: #2d4052;
     --sidebar-ring: #55D9C1;
+    --neon-blue: #4F8EFF;
+    --success: #55D9C1;
 }
 
 @theme inline {
@@ -96,26 +98,40 @@
     .bg-expense { background-color: #ef4444; }
 }
 
-@layer utilities {
-    .animate-blob {
-        animation: blob 7s infinite;
-    }
-    .animation-delay-2000 {
-        animation-delay: 2s;
-    }
-    .animation-delay-4000 {
-        animation-delay: 4s;
-    }
+@keyframes confetti-fall {
+    0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100px) rotate(720deg); opacity: 0; }
 }
 
-@keyframes blob {
-    0% { transform: translate(0px, 0px) scale(1); }
-    33% { transform: translate(30px, -50px) scale(1.1); }
-    66% { transform: translate(-20px, 20px) scale(0.9); }
-    100% { transform: translate(0px, 0px) scale(1); }
+@keyframes success-check {
+    0% { transform: scale(0) rotate(-45deg); opacity: 0; }
+    50% { transform: scale(1.2) rotate(-45deg); opacity: 1; }
+    100% { transform: scale(1) rotate(-45deg); opacity: 1; }
 }
 
-.bg-grid-pattern {
-    background-image: radial-gradient(circle at 2px 2px, var(--border) 1px, transparent 0);
-    background-size: 40px 40px;
+.animate-confetti {
+    animation: confetti-fall 1s ease-out forwards;
+}
+
+.animate-success-check {
+    animation: success-check 0.4s ease-out forwards;
+}
+
+@keyframes confetti-fall {
+    0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100px) rotate(720deg); opacity: 0; }
+}
+
+@keyframes success-check {
+    0% { transform: scale(0) rotate(-45deg); opacity: 0; }
+    50% { transform: scale(1.2) rotate(-45deg); opacity: 1; }
+    100% { transform: scale(1) rotate(-45deg); opacity: 1; }
+}
+
+.animate-confetti {
+    animation: confetti-fall 1s ease-out forwards;
+}
+
+.animate-success-check {
+    animation: success-check 0.4s ease-out forwards;
 }
