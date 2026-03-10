@@ -458,4 +458,6 @@ public class TransactionService {
             System.err.println("Aviso: Falha ao processar camada de segurança para " + userEmail);
         }
     }
+
+
 }

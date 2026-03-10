@@ -71,7 +71,7 @@ public class TransactionController {
     @PutMapping("/{id}")
     public ResponseEntity<Transaction> updateTransaction(
             @PathVariable String id,
-            @RequestBody @Valid TransactionRequestDTO dto
+            @RequestBody TransactionRequestDTO dto
     ) {
         Transaction updated = transactionService.update(id, dto);
         return ResponseEntity.ok(updated);
