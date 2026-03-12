@@ -135,3 +135,9 @@
 .animate-success-check {
     animation: success-check 0.4s ease-out forwards;
 }
+
+/* Esconde o ícone nativo de "revelar senha" do Edge/Chrome */
+input::-ms-reveal,
+input::-ms-clear {
+    display: none;
+}

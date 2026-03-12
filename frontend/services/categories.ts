@@ -49,10 +49,34 @@ export async function deleteCategory(id: string): Promise<void> {
     if (!res.ok) throw await parseError(res)
 }
 
-// ✅ Tratamento de erro genérico
+// ✅ No arquivo services/categories.ts
+
 async function parseError(res: Response) {
-    const text = await res.text()
-    const error = new Error(text || "Erro na requisição") as Error & { status: number }
-    error.status = res.status
-    return error
+    let errorMessage = "Erro na requisição";
+
+    try {
+        const data = await res.json();
+        // Se o backend enviou um objeto com o campo "message", usamos ele
+        errorMessage = data.message || errorMessage;
+    } catch {
+        // Se não for um JSON válido, tenta ler como texto puro
+        const text = await res.text();
+        if (text) errorMessage = text;
+    }
+
+    const error = new Error(errorMessage) as Error & { status: number };
+    error.status = res.status;
+    return error;
 }
+
+// ✅ Atualizar nome de categoria customizada
+export async function updateCategory(id: string, name: string): Promise<UserCategory> {
+    const res = await fetch(`${API_BASE_URL}/categories/${id}`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ name }),
+    })
+    if (!res.ok) throw await parseError(res)
+    return res.json()
+}
+

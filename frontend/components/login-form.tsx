@@ -3,11 +3,12 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Eye, EyeOff, Mail, Lock, Loader2 } from "lucide-react"
+import {Eye, EyeOff, Mail, Lock, Loader2, AlertCircle} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { loginUser, saveToken } from "@/services/auth"
+import { motion } from "framer-motion"
 
 export function LoginForm() {
     const router = useRouter()
@@ -83,9 +84,16 @@ export function LoginForm() {
             </div>
 
             {error && (
-                <div className="rounded-xl bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive animate-in fade-in slide-in-from-top-1 text-center font-medium">
-                    {error}
-                </div>
+                <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-center gap-3 rounded-xl bg-destructive/15 border border-destructive/20 px-4 py-3 text-sm text-red-400 animate-in fade-in slide-in-from-top-1"
+                >
+                    {/* O ícone fica naturalmente à esquerda por causa do flex-row */}
+                    <AlertCircle className="size-4 shrink-0" />
+                    {/* Removido o text-center e flex-1 para o texto não tentar centralizar */}
+                    <p className="font-medium">{error}</p>
+                </motion.div>
             )}
 
             <Button

@@ -54,4 +54,10 @@ public class CategoryController {
 
         categoryService.softDelete(email, id);
     }
+
+    @PutMapping("/{id}")
+    public Category updateCategory(@PathVariable String id, @RequestBody CategoryRequestDTO body) {
+        String email = AuthenticatedUser.getEmail();
+        return categoryService.rename(email, id, body.getName());
+    }
 }

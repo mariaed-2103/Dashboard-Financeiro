@@ -3,11 +3,12 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Eye, EyeOff, Mail, Lock, User, Loader2 } from "lucide-react"
+import { Eye, EyeOff, Mail, Lock, User, Loader2, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { registerUser } from "@/services/auth"
+import { motion } from "framer-motion"
 
 export function RegisterForm() {
     const router = useRouter()
@@ -20,6 +21,13 @@ export function RegisterForm() {
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
 
+    // Validação de senha forte
+    const isPasswordStrong = (pass: string) => {
+        const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        const isObvious = /123|abc|password|qwerty|clarus/i.test(pass);
+        return regex.test(pass) && !isObvious;
+    };
+
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault()
         setError("")
@@ -29,8 +37,8 @@ export function RegisterForm() {
             return
         }
 
-        if (password.length < 6) {
-            setError("A senha deve ter pelo menos 6 caracteres")
+        if (!isPasswordStrong(password)) {
+            setError("A senha deve ter 8+ caracteres, incluir maiúsculas, números e símbolos (ex: @#$).")
             return
         }
 
@@ -89,12 +97,12 @@ export function RegisterForm() {
                     <Input
                         id="password"
                         type={showPassword ? "text" : "password"}
-                        placeholder="Mínimo 6 caracteres"
+                        placeholder="8+ caracteres (Ex: Clarus@2026)"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         className={`${inputClasses} pr-10`}
                         required
-                        minLength={6}
+                        minLength={8}
                     />
                     <button
                         type="button"
@@ -119,7 +127,7 @@ export function RegisterForm() {
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         className={`${inputClasses} pr-10`}
                         required
-                        minLength={6}
+                        minLength={8}
                     />
                     <button
                         type="button"
@@ -133,9 +141,14 @@ export function RegisterForm() {
             </div>
 
             {error && (
-                <div className="rounded-md bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive animate-in fade-in slide-in-from-top-1">
-                    {error}
-                </div>
+                <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-center gap-3 rounded-xl bg-destructive/15 border border-destructive/20 px-4 py-3 text-sm text-red-400"
+                >
+                    <AlertCircle className="size-4 shrink-0" />
+                    <p className="font-medium text-left">{error}</p>
+                </motion.div>
             )}
 
             <Button

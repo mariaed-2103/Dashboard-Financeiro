@@ -23,11 +23,18 @@ export async function loginUser(data: LoginRequest): Promise<AuthResponse> {
     })
 
     if (!res.ok) {
-        const errorText = await res.text()
-        throw new Error(errorText || "Credenciais inv\u00e1lidas")
+        let errorMessage = "Credenciais inválidas"; // fallback padrão
+        try {
+            const errorData = await res.json();
+            errorMessage = errorData.message || errorMessage;
+        } catch {
+            const text = await res.text();
+            if (text) errorMessage = text;
+        }
+        throw new Error(errorMessage);
     }
 
-    return res.json()
+    return res.json();
 }
 
 export async function registerUser(data: RegisterRequest): Promise<void> {
@@ -38,8 +45,17 @@ export async function registerUser(data: RegisterRequest): Promise<void> {
     })
 
     if (!res.ok) {
-        const errorText = await res.text()
-        throw new Error(errorText || "Erro ao cadastrar")
+        let errorMessage = "Erro ao cadastrar";
+        try {
+            const errorData = await res.json();
+            // Pega a mensagem do backend ou usa o padrão
+            errorMessage = errorData.message || errorMessage;
+        } catch {
+            // Se não for JSON, tenta ler como texto
+            const text = await res.text();
+            if (text) errorMessage = text;
+        }
+        throw new Error(errorMessage);
     }
 }
 

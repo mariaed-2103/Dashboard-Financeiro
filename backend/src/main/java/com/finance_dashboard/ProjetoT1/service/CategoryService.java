@@ -65,7 +65,7 @@ public class CategoryService {
 
         if (category.isDefault()) {
             throw new RuntimeException(
-                    "Categorias padrão não podem ser renomeadas");
+                    "Categorias padrão não podem ser renomeadas.");
         }
 
         category.setName(newName);
@@ -80,11 +80,11 @@ public class CategoryService {
         Category category = repository
                 .findByIdAndUserEmail(id, userEmail)
                 .orElseThrow(() ->
-                        new IllegalArgumentException("Categoria não encontrada"));
+                        new IllegalArgumentException("Categoria não encontrada."));
 
         if (category.isDefault()) {
             throw new IllegalArgumentException(
-                    "Categorias padrão não podem ser removidas");
+                    "Categorias padrão não podem ser removidas.");
         }
 
         boolean hasTransactions =
@@ -96,7 +96,7 @@ public class CategoryService {
 
         if (hasTransactions) {
             throw new IllegalArgumentException(
-                    "Não é possível excluir categoria com transações");
+                    "Não é possível excluir categoria com transações.");
         }
 
         category.setActive(false);

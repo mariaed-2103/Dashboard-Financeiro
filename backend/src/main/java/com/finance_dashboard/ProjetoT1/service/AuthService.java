@@ -32,13 +32,13 @@ public class AuthService {
     }
 
     public void register(RegisterRequestDTO dto) {
-
         if (userRepository.existsByEmail(dto.email())) {
             throw new IllegalArgumentException("E-mail já cadastrado");
         }
 
-        // 1. Criamos o objeto User com os dados do DTO.
-        // Passamos a senha pura, pois o userService.registerUser cuidará do encode.
+        // Validação de força de senha antes de prosseguir
+        validatePasswordStrength(dto.password());
+
         User user = new User(
                 dto.name(),
                 dto.email(),
@@ -46,11 +46,27 @@ public class AuthService {
         );
 
         try {
-            // 2. Chamamos o service que gera a chave criptográfica e salva no MongoDB.
             userService.registerUser(user);
         } catch (Exception e) {
-            // 3. Tratamento de erro caso a criptografia falhe (ex: Master Key ausente).
             throw new RuntimeException("Erro ao processar segurança do usuário: " + e.getMessage());
+        }
+    }
+
+    private void validatePasswordStrength(String password) {
+        if (password == null || password.length() < 8) {
+            throw new IllegalArgumentException("A senha deve ter pelo menos 8 caracteres.");
+        }
+
+        // Bloqueia sequências óbvias (123, abc, password, etc)
+        if (password.toLowerCase().matches(".*(123|abc|password|qwerty|clarus).*")) {
+            throw new IllegalArgumentException("A senha é muito óbvia ou comum.");
+        }
+
+        // Regex: Pelo menos uma maiúscula, uma minúscula, um número e um caractere especial
+        String strongPasswordRegex = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!])(?=\\S+$).{8,}$";
+
+        if (!password.matches(strongPasswordRegex)) {
+            throw new IllegalArgumentException("A senha deve conter letras maiúsculas, minúsculas, números e caracteres especiais.");
         }
     }
 

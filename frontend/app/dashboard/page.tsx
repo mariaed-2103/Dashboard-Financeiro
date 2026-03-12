@@ -629,7 +629,7 @@ export default function DashboardPage() {
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent
-                                    className="w-auto p-0 border-border/50 bg-card rounded-xl shadow-lg"
+                                    className="cursor-pointer w-auto p-0 border-border/50 bg-card rounded-xl shadow-lg"
                                     align="start"
                                 >
                                     <Calendar
@@ -671,7 +671,7 @@ export default function DashboardPage() {
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent
-                                    className="w-auto p-0 border-border/50 bg-card rounded-xl shadow-lg"
+                                    className="cursor-pointer w-auto p-0 border-border/50 bg-card rounded-xl shadow-lg"
                                     align="start"
                                 >
                                     <Calendar

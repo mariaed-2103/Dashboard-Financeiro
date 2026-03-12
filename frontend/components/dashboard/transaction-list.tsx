@@ -56,13 +56,19 @@ export function TransactionList({ transactions, isLoading, error, onEdit, onDele
 
     const exportCSV = () => {
         const headers = ["Data", "Descrição", "Categoria", "Tipo", "Valor (R$)"];
-        const rows = transactions.map((t) => [
-            formatDate(t.date),
-            `"${t.description.replace(/"/g, '""')}"`,
-            `"${getCategoryName(t.categoryId)}"`,
-            t.type === "INCOME" ? "Receita" : "Despesa",
-            (t.type === "INCOME" ? t.amount : -t.amount).toFixed(2).replace(".", ","),
-        ]);
+        const rows = transactions.map((t) => {
+            // Garante que o valor é um número para evitar o erro toFixed
+            const amount = Number(t.amount) || 0;
+            const finalValue = t.type === "INCOME" ? amount : -amount;
+
+            return [
+                formatDate(t.date),
+                `"${t.description.replace(/"/g, '""')}"`,
+                `"${getCategoryName(t.categoryId)}"`,
+                t.type === "INCOME" ? "Receita" : "Despesa",
+                finalValue.toFixed(2).replace(".", ","),
+            ];
+        });
         const csv = [headers.join(";"), ...rows.map((r) => r.join(";"))].join("\n");
         const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
         const url = URL.createObjectURL(blob);
@@ -75,15 +81,20 @@ export function TransactionList({ transactions, isLoading, error, onEdit, onDele
 
     const exportExcel = () => {
         const headers = ["Data", "Descrição", "Categoria", "Tipo", "Valor (R$)"];
-        const rows = transactions.map((t) => [
-            formatDate(t.date),
-            t.description,
-            getCategoryName(t.categoryId),
-            t.type === "INCOME" ? "Receita" : "Despesa",
-            (t.type === "INCOME" ? t.amount : -t.amount).toFixed(2).replace(".", ","),
-        ]);
+        const rows = transactions.map((t) => {
+            // Garante que o valor é um número para evitar o erro toFixed
+            const amount = Number(t.amount) || 0;
+            const finalValue = t.type === "INCOME" ? amount : -amount;
 
-        // Gera XML do Excel (SpreadsheetML) sem dependência externa
+            return [
+                formatDate(t.date),
+                t.description,
+                getCategoryName(t.categoryId),
+                t.type === "INCOME" ? "Receita" : "Despesa",
+                finalValue.toFixed(2).replace(".", ","),
+            ];
+        });
+
         const xmlRows = [headers, ...rows]
             .map((row) =>
                 `<Row>${row
@@ -110,6 +121,7 @@ export function TransactionList({ transactions, isLoading, error, onEdit, onDele
         URL.revokeObjectURL(url);
     };
 
+    // ... resto do seu componente (JSX) permanece igual
     return (
         <>
             <Card className="border-border/50">
@@ -236,7 +248,6 @@ export function TransactionList({ transactions, isLoading, error, onEdit, onDele
                 </CardContent>
             </Card>
 
-            {/* Alert Dialog de confirmação de exclusão */}
             <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
