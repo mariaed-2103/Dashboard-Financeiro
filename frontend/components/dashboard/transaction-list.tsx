@@ -41,8 +41,18 @@ export function TransactionList({ transactions, isLoading, error, onEdit, onDele
 
     const formatDate = (dateString: string) => {
         try {
-            return format(parseISO(dateString), "dd MMM yyyy", { locale: ptBR });
-        } catch {
+            // 1. Extraímos apenas o que importa: Ano, Mês e Dia (ignora o T00:00... se existir)
+            const datePart = dateString.split('T')[0];
+            const [year, month, day] = datePart.split('-').map(Number);
+
+            // 2. Criamos o objeto Date usando o fuso horário local (mês é 0-indexed)
+            // Definir 12h é um "seguro" extra contra variações de fuso
+            const localDate = new Date(year, month - 1, day, 12, 0, 0);
+
+            // 3. Formatamos usando o date-fns que você já tem instalado
+            return format(localDate, "dd MMM yyyy", { locale: ptBR });
+        } catch (err) {
+            // Se algo der muito errado, retorna a string original
             return dateString;
         }
     };

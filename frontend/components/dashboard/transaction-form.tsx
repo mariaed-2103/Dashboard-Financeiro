@@ -108,10 +108,18 @@ export function TransactionForm({ onSubmit, isSubmitting, initialData, globalCat
     }, [initialData, reset]);
 
     const onFormSubmit = async (values: TransactionFormValues) => {
+        // Pegamos os componentes da data local individualmente
+        const year = values.date.getFullYear();
+        const month = String(values.date.getMonth() + 1).padStart(2, '0');
+        const day = String(values.date.getDate()).padStart(2, '0');
+
+        // Montamos a string YYYY-MM-DD manualmente para evitar UTC offset
+        const dateStr = `${year}-${month}-${day}`;
+
         await onSubmit({
             ...values,
             amount: parseFloat(values.amount),
-            date: format(values.date, "yyyy-MM-dd"),
+            date: dateStr,
         }, initialData?.id);
 
         if (!initialData) reset();
