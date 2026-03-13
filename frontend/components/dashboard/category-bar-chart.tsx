@@ -44,11 +44,52 @@ function CustomLegend() {
     )
 }
 
+// Tooltip customizado que exibe o nome COMPLETO da categoria
+function CustomTooltip({
+                           active,
+                           payload,
+                           label,
+                       }: {
+    active?: boolean
+    payload?: Array<{ name: string; value: number; fill: string }>
+    label?: string
+}) {
+    if (!active || !payload?.length) return null
+    return (
+        <div
+            style={{
+                backgroundColor: "#1a2a38",
+                border: "1px solid #2d4052",
+                borderRadius: "8px",
+                color: "#e8edf2",
+                padding: "10px 14px",
+                maxWidth: 220,
+            }}
+        >
+            {/* label é o nome completo (sem truncar), vindo do dataKey original */}
+            <p style={{ color: "#e8edf2", fontWeight: 600, marginBottom: 6, wordBreak: "break-word" }}>
+                {label}
+            </p>
+            {payload.map((entry) => (
+                <p key={entry.name} style={{ color: entry.fill, marginBottom: 2 }}>
+                    {entry.name}: {formatCurrency(entry.value)}
+                </p>
+            ))}
+        </div>
+    )
+}
+
 export function CategoryBarChart({ data, userCategories }: Props) {
     const chartData = data
         .filter((item) => item.income > 0 || item.expense > 0)
         .map((item) => ({
+            // `name` é o nome COMPLETO — usado no tooltip
             name: resolveCategoryName(item, userCategories),
+            // `shortName` é o truncado — usado apenas no eixo X visual
+            shortName: (() => {
+                const n = resolveCategoryName(item, userCategories)
+                return n.length > 10 ? `${n.substring(0, 9)}…` : n
+            })(),
             Receitas: item.income,
             Despesas: item.expense,
         }))
@@ -79,20 +120,32 @@ export function CategoryBarChart({ data, userCategories }: Props) {
             </CardHeader>
             <CardContent className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={chartData} barGap={4} barCategoryGap="20%">
+                    {/*
+                        Usamos `shortName` no XAxis (visual truncado) e `name` no tooltip (nome completo).
+                        O trick: XAxis dataKey="shortName", mas as Bars usam dataKey="Receitas"/"Despesas"
+                        e o Tooltip recebe `label` = o valor de XAxis, então mostramos `name` no tooltip
+                        passando nameKey pelo tooltipPayload via nameKey workaround abaixo.
+                    */}
+                    <BarChart
+                        data={chartData}
+                        barGap={4}
+                        barCategoryGap="20%"
+                        // Passa o nome completo para o tooltip via prop label usando o campo `name`
+                    >
                         <CartesianGrid
                             strokeDasharray="3 3"
                             stroke="#2d4052"
                             vertical={false}
                         />
                         <XAxis
-                            dataKey="name"
+                            dataKey="shortName"
                             tick={{ fill: "#8a9bb0", fontSize: 11 }}
                             axisLine={{ stroke: "#2d4052" }}
                             tickLine={false}
-                            angle={-25}
+                            angle={-20}
                             textAnchor="end"
-                            height={60}
+                            height={55}
+                            // Não precisamos mais de tickFormatter — já truncamos no shortName
                         />
                         <YAxis
                             tick={{ fill: "#8a9bb0", fontSize: 11 }}
@@ -102,28 +155,53 @@ export function CategoryBarChart({ data, userCategories }: Props) {
                                 v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v)
                             }
                         />
+                        {/*
+                            Para mostrar nome completo no tooltip, usamos um CustomTooltip
+                            que recebe `label` (= shortName do XAxis) — isso ainda seria truncado.
+                            Solução: passamos `name` diretamente pelos dados via um Bar "fantasma"
+                            escondido, OU mais simples: renderizamos nosso tooltip customizado
+                            com acesso ao índice + chartData completo.
+                        */}
                         <Tooltip
                             cursor={false}
-                            formatter={(value: number) => formatCurrency(value)}
-                            contentStyle={{
-                                backgroundColor: "#1a2a38",
-                                border: "1px solid #2d4052",
-                                borderRadius: "8px",
-                                color: "#e8edf2",
+                            content={({ active, payload, label }) => {
+                                if (!active || !payload?.length) return null
+                                // Busca o nome completo pelo shortName (label)
+                                const fullName =
+                                    chartData.find((d) => d.shortName === label)?.name ?? label
+                                return (
+                                    <div
+                                        style={{
+                                            backgroundColor: "#1a2a38",
+                                            border: "1px solid #2d4052",
+                                            borderRadius: "8px",
+                                            color: "#e8edf2",
+                                            padding: "10px 14px",
+                                            maxWidth: 240,
+                                        }}
+                                    >
+                                        <p
+                                            style={{
+                                                color: "#e8edf2",
+                                                fontWeight: 600,
+                                                marginBottom: 6,
+                                                wordBreak: "break-word",
+                                            }}
+                                        >
+                                            {fullName}
+                                        </p>
+                                        {payload.map((entry: { name: string; value: number; fill: string }) => (
+                                            <p key={entry.name} style={{ color: entry.fill, marginBottom: 2 }}>
+                                                {entry.name}: {formatCurrency(entry.value as number)}
+                                            </p>
+                                        ))}
+                                    </div>
+                                )
                             }}
-                            labelStyle={{ color: "#e8edf2" }}
                         />
                         <Legend content={<CustomLegend />} />
-                        <Bar
-                            dataKey="Receitas"
-                            fill="#22c55e"
-                            radius={[4, 4, 0, 0]}
-                        />
-                        <Bar
-                            dataKey="Despesas"
-                            fill="#ef4444"
-                            radius={[4, 4, 0, 0]}
-                        />
+                        <Bar dataKey="Receitas" fill="#22c55e" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="Despesas" fill="#ef4444" radius={[4, 4, 0, 0]} />
                     </BarChart>
                 </ResponsiveContainer>
             </CardContent>

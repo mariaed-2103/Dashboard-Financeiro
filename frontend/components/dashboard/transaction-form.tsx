@@ -20,7 +20,6 @@ import { cn } from "@/lib/utils";
 import type { Transaction, TransactionFormData, TransactionType, UserCategory, Category } from "@/types/transaction";
 import { CATEGORY_LABELS } from "@/types/transaction";
 
-// 1. Definição do Schema de Validação com Zod
 const transactionSchema = z.object({
     description: z.string().min(1, "A descrição é obrigatória").max(100, "Máximo de 100 caracteres"),
     amount: z.string()
@@ -48,7 +47,6 @@ interface TransactionFormProps {
 
 export function TransactionForm({ onSubmit, isSubmitting, initialData, globalCategories, customCategories }: TransactionFormProps) {
 
-    // 2. Configuração do Hook Form com Zod
     const {
         register,
         handleSubmit,
@@ -82,6 +80,12 @@ export function TransactionForm({ onSubmit, isSubmitting, initialData, globalCat
         }));
         return [...globalCats, ...customCats];
     }, [globalCategories, customCategories]);
+
+    // Nome completo da categoria selecionada — para exibir no título do popover ao hover
+    const selectedCategoryLabel = useMemo(
+        () => categories.find((c) => c.value === selectedCategoryId)?.label ?? "",
+        [categories, selectedCategoryId]
+    );
 
     useEffect(() => {
         if (initialData) {
@@ -123,20 +127,25 @@ export function TransactionForm({ onSubmit, isSubmitting, initialData, globalCat
             </CardHeader>
             <CardContent>
                 <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5 min-w-0">
+
                         {/* Descrição */}
-                        <div className="space-y-2">
+                        <div className="space-y-2 min-w-0">
                             <Label htmlFor="description" className="text-muted-foreground">Descrição</Label>
                             <Input
                                 {...register("description")}
                                 placeholder="Ex: Compras no mercado"
                                 className={cn("bg-secondary border-border/50", errors.description && "border-destructive")}
                             />
-                            {errors.description && <p className="text-[10px] text-destructive flex items-center gap-1"><AlertCircle className="size-3"/>{errors.description.message}</p>}
+                            {errors.description && (
+                                <p className="text-[10px] text-destructive flex items-center gap-1">
+                                    <AlertCircle className="size-3" />{errors.description.message}
+                                </p>
+                            )}
                         </div>
 
                         {/* Valor */}
-                        <div className="space-y-2">
+                        <div className="space-y-2 min-w-0">
                             <Label htmlFor="amount" className="text-muted-foreground">Valor (R$)</Label>
                             <Input
                                 {...register("amount")}
@@ -145,11 +154,15 @@ export function TransactionForm({ onSubmit, isSubmitting, initialData, globalCat
                                 placeholder="0,00"
                                 className={cn("bg-secondary border-border/50", errors.amount && "border-destructive")}
                             />
-                            {errors.amount && <p className="text-[10px] text-destructive flex items-center gap-1"><AlertCircle className="size-3"/>{errors.amount.message}</p>}
+                            {errors.amount && (
+                                <p className="text-[10px] text-destructive flex items-center gap-1">
+                                    <AlertCircle className="size-3" />{errors.amount.message}
+                                </p>
+                            )}
                         </div>
 
                         {/* Tipo */}
-                        <div className="space-y-2">
+                        <div className="space-y-2 min-w-0">
                             <Label className="text-muted-foreground">Tipo</Label>
                             <Select value={selectedType} onValueChange={(v) => setValue("type", v as TransactionType)}>
                                 <SelectTrigger className="bg-secondary border-border/50">
@@ -162,30 +175,67 @@ export function TransactionForm({ onSubmit, isSubmitting, initialData, globalCat
                             </Select>
                         </div>
 
-                        {/* Categoria */}
-                        <div className="space-y-2">
+                        {/* Categoria — corrigido para truncar nomes longos corretamente */}
+                        <div className="space-y-2 min-w-0">
                             <Label className="text-muted-foreground">Categoria</Label>
                             <Select value={selectedCategoryId} onValueChange={(v) => setValue("categoryId", v)}>
-                                <SelectTrigger className={cn("bg-secondary border-border/50", errors.categoryId && "border-destructive")}>
-                                    <SelectValue placeholder="Selecione" />
+                                {/*
+                                    O SelectTrigger precisa de `overflow-hidden` e width fixo.
+                                    O span interno com `truncate` garante que o texto não extrapole.
+                                    O `title` exibe o nome completo no hover nativo do browser.
+                                */}
+                                <SelectTrigger
+                                    className={cn(
+                                        "bg-secondary border-border/50 w-full",
+                                        errors.categoryId && "border-destructive"
+                                    )}
+                                    title={selectedCategoryLabel} // mostra nome completo no hover
+                                >
+                                    {/*
+                                        Substituímos o <SelectValue> por um span manual para ter
+                                        controle total sobre o truncamento. O SelectValue nativo
+                                        não respeita truncate dentro de flex containers do Radix.
+                                    */}
+                                    <span className="block truncate text-sm">
+                                        {selectedCategoryLabel || (
+                                            <span className="text-muted-foreground">Selecione</span>
+                                        )}
+                                    </span>
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {categories.map(cat => (
-                                        <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+                                    {categories.map((cat) => (
+                                        <SelectItem key={cat.value} value={cat.value}>
+                                            {/* Nome completo visível na lista dropdown */}
+                                            {cat.label}
+                                        </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
-                            {errors.categoryId && <p className="text-[10px] text-destructive">{errors.categoryId.message}</p>}
+                            {errors.categoryId && (
+                                <p className="text-[10px] text-destructive flex items-center gap-1">
+                                    <AlertCircle className="size-3" />{errors.categoryId.message}
+                                </p>
+                            )}
                         </div>
 
                         {/* Data */}
-                        <div className="space-y-2 flex flex-col">
+                        <div className="space-y-2 flex flex-col min-w-0">
                             <Label className="text-muted-foreground">Data</Label>
                             <Popover>
                                 <PopoverTrigger asChild>
-                                    <Button variant="outline" className={cn("w-full justify-start text-left bg-secondary border-border/50", errors.date && "border-destructive")}>
-                                        <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {selectedDate ? format(selectedDate, "dd/MM/yyyy", { locale: ptBR }) : "Selecione"}
+                                    <Button
+                                        variant="outline"
+                                        className={cn(
+                                            "w-full justify-start text-left bg-secondary border-border/50 px-3",
+                                            errors.date && "border-destructive"
+                                        )}
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
+                                        <span className="truncate">
+                                            {selectedDate
+                                                ? format(selectedDate, "dd/MM/yyyy", { locale: ptBR })
+                                                : "Selecione"}
+                                        </span>
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-0 border-border/50 bg-card">
@@ -202,7 +252,9 @@ export function TransactionForm({ onSubmit, isSubmitting, initialData, globalCat
                     </div>
 
                     <Button type="submit" disabled={isSubmitting} className="w-full md:w-auto bg-primary">
-                        {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlusCircle className="mr-2 h-4 w-4" />}
+                        {isSubmitting
+                            ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            : <PlusCircle className="mr-2 h-4 w-4" />}
                         {initialData ? "Salvar Alterações" : "Adicionar Transação"}
                     </Button>
                 </form>

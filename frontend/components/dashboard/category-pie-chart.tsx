@@ -46,24 +46,54 @@ function formatCurrency(value: number) {
     return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
 }
 
+// Trunca nomes longos para exibição nos labels do gráfico
+function truncateName(name: string, maxLength = 14): string {
+    return name.length > maxLength ? `${name.substring(0, maxLength - 1)}…` : name
+}
+
 interface LegendEntry {
     value: string
     color: string
 }
 
+// Legend customizada com scroll se houver muitos itens
 function CustomLegend({ payload }: { payload?: LegendEntry[] }) {
     if (!payload) return null
     return (
-        <div className="flex items-center justify-center gap-4 pt-2">
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 pt-2 max-h-20 overflow-y-auto">
             {payload.map((entry, index) => (
-                <div key={index} className="flex items-center gap-1.5">
+                <div key={index} className="flex items-center gap-1.5 min-w-0">
                     <span
                         className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
                         style={{ backgroundColor: entry.color }}
                     />
-                    <span className="text-xs text-muted-foreground">{entry.value}</span>
+                    {/* Mostra o nome completo na legend — só trunca no label do gráfico */}
+                    <span className="text-xs text-muted-foreground truncate max-w-[120px]" title={entry.value}>
+                        {entry.value}
+                    </span>
                 </div>
             ))}
+        </div>
+    )
+}
+
+// Tooltip customizado que mostra o nome completo
+function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<{ name: string; value: number }> }) {
+    if (!active || !payload?.length) return null
+    const { name, value } = payload[0]
+    return (
+        <div
+            style={{
+                backgroundColor: "#ffffff",
+                border: "1px solid #e2e8f0",
+                borderRadius: "10px",
+                color: "#1a2a38",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                padding: "10px 14px",
+            }}
+        >
+            <p style={{ fontWeight: 600, marginBottom: 4, color: "#0f172a" }}>{name}</p>
+            <p style={{ color: "#334155", fontWeight: 500 }}>{formatCurrency(value)}</p>
         </div>
     )
 }
@@ -97,7 +127,7 @@ export function CategoryPieChart({ data, type, userCategories }: Props) {
     }
 
     const legendPayload = chartData.map((entry, index) => ({
-        value: entry.name,
+        value: entry.name, // nome completo na legend
         color: colors[index % colors.length],
     }))
 
@@ -114,11 +144,12 @@ export function CategoryPieChart({ data, type, userCategories }: Props) {
                             dataKey="value"
                             nameKey="name"
                             cx="50%"
-                            cy="50%"
+                            cy="45%"
                             innerRadius={50}
-                            outerRadius={90}
+                            outerRadius={80}
                             paddingAngle={2}
-                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                            // Label mostra só a % — nome completo fica no tooltip e na legend
+                            label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
                             labelLine={false}
                         >
                             {chartData.map((_entry, index) => (
@@ -129,26 +160,7 @@ export function CategoryPieChart({ data, type, userCategories }: Props) {
                                 />
                             ))}
                         </Pie>
-                        <Tooltip
-                            formatter={(value: number) => formatCurrency(value)}
-                            contentStyle={{
-                                backgroundColor: "#ffffff",
-                                border: "1px solid #e2e8f0",
-                                borderRadius: "10px",
-                                color: "#1a2a38",
-                                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-                                padding: "10px 14px",
-                                fontWeight: 500,
-                            }}
-                            itemStyle={{
-                                color: "#334155",
-                            }}
-                            labelStyle={{
-                                color: "#0f172a",
-                                fontWeight: 600,
-                                marginBottom: "4px",
-                            }}
-                        />
+                        <Tooltip content={<CustomTooltip />} />
                         <Legend
                             content={<CustomLegend payload={legendPayload} />}
                         />
