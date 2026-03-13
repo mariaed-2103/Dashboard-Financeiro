@@ -9,18 +9,14 @@ public interface CategoryRepository extends MongoRepository<Category, String> {
 
     List<Category> findByUserEmailAndActiveTrue(String userEmail);
 
-    long countByUserEmailAndIsDefaultFalse(String userEmail);
+    long countByUserEmailAndIsDefaultFalseAndActiveTrue(String userEmail);
 
     boolean existsByUserEmailAndNormalizedName(String userEmail, String normalizedName);
 
     Optional<Category> findByIdAndUserEmail(String id, String userEmail);
 
-    // ✅ Adicione estes métodos para resolver os erros do Controller e Service:
     Optional<Category> findByIdAndUserEmailAndActiveTrue(String id, String userEmail);
 
     List<Category> findByUserEmailIsNullAndActiveTrue();
 
-    boolean existsByNameAndUserEmailIsNull(String name);
-
-    boolean existsByNameAndUserEmail(String name, String email);
 }

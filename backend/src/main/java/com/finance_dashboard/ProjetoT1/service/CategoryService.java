@@ -29,8 +29,9 @@ public class CategoryService {
 
     public Category create(String userEmail, String name) {
 
+        // Corrigido: conta apenas categorias ATIVAS para não penalizar soft deletes
         long customCount =
-                repository.countByUserEmailAndIsDefaultFalse(userEmail);
+                repository.countByUserEmailAndIsDefaultFalseAndActiveTrue(userEmail);
 
         if (customCount >= 20) {
             throw new IllegalStateException("Limite atingido");
@@ -77,10 +78,11 @@ public class CategoryService {
 
     public void softDelete(String userEmail, String id) {
 
+        // Corrigido: busca apenas categorias ativas — evita reprocessar categorias já deletadas
         Category category = repository
-                .findByIdAndUserEmail(id, userEmail)
+                .findByIdAndUserEmailAndActiveTrue(id, userEmail)
                 .orElseThrow(() ->
-                        new IllegalArgumentException("Categoria não encontrada."));
+                        new IllegalArgumentException("Categoria não encontrada ou já removida."));
 
         if (category.isDefault()) {
             throw new IllegalArgumentException(
