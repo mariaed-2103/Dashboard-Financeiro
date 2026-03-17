@@ -51,7 +51,7 @@ public class SecurityConfig {
         // Adicione a URL da sua Vercel na lista de origens permitidas
         config.setAllowedOrigins(List.of(
                 "http://localhost:3000",
-                "https://dashboard-financeiro-kappa-three.vercel.app" // URL do seu front
+                "https://clarus-financeiro.vercel.app/" // URL do seu front
         ));
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
