@@ -6,6 +6,7 @@ import com.finance_dashboard.ProjetoT1.model.User;
 import com.finance_dashboard.ProjetoT1.repository.UserRepository;
 import com.finance_dashboard.ProjetoT1.security.CryptoUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,6 +22,9 @@ import java.util.UUID;
 
 @Service
 public class UserService {
+
+    @Value("${app.base-url}")
+    private String baseUrl;
 
     @Autowired
     private CryptoUtils cryptoUtils;
@@ -96,27 +100,27 @@ public class UserService {
         }
 
         try {
-            String uploadDir = "uploads/";
-            File dir = new File(uploadDir);
-            if (!dir.exists()) dir.mkdirs();
+            // Usamos Path de forma mais robusta para evitar erros de diretório no Docker
+            Path uploadPath = Paths.get("uploads").toAbsolutePath().normalize();
 
-            // Deletar imagem antiga se existir
-            if (user.getProfileImageUrl() != null) {
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
+
+            if (user.getProfileImageUrl() != null && user.getProfileImageUrl().contains("/uploads/")) {
                 String oldFileName = user.getProfileImageUrl()
                         .substring(user.getProfileImageUrl().lastIndexOf("/") + 1);
 
-                Path oldFilePath = Paths.get(uploadDir + oldFileName);
+                Path oldFilePath = uploadPath.resolve(oldFileName);
                 Files.deleteIfExists(oldFilePath);
             }
 
-            // Criar novo nome único
             String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-            Path filePath = Paths.get(uploadDir, fileName);
+            Path filePath = uploadPath.resolve(fileName);
 
-            // Permitir sobrescrita explícita
             Files.copy(file.getInputStream(), filePath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
 
-            String imageUrl = "http://localhost:8080/uploads/" + fileName;
+            String imageUrl = baseUrl + "/uploads/" + fileName;
 
             user.setProfileImageUrl(imageUrl);
             user.setUpdatedAt(LocalDateTime.now());
@@ -126,8 +130,8 @@ public class UserService {
             return toDTO(user);
 
         } catch (IOException e) {
-            e.printStackTrace(); // importante pra debug real
-            throw new RuntimeException("Erro ao salvar imagem");
+            e.printStackTrace();
+            throw new RuntimeException("Erro ao salvar imagem: " + e.getMessage());
         }
     }
 
