@@ -29,6 +29,10 @@ public class CryptoUtils {
     }
 
     public String decrypt(String data) throws Exception {
+        if (data == null || !data.contains(":")) {
+            return data;
+        }
+
         String[] parts = data.split(":");
         byte[] iv = Base64.getDecoder().decode(parts[0]);
         byte[] encrypted = Base64.getDecoder().decode(parts[1]);

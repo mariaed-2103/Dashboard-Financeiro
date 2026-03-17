@@ -10,6 +10,11 @@ public class UserKeyService {
     private CryptoUtils cryptoUtils;
 
     public String getUserKey(User user) throws Exception {
+        if (user.getEncryptedUserKey() == null) {
+            // Você pode lançar uma exceção personalizada ou retornar null
+            // Dependendo de como o Clarus lida com novos usuários
+            throw new IllegalStateException("Usuário não possui chave de criptografia configurada.");
+        }
         return cryptoUtils.decrypt(user.getEncryptedUserKey());
     }
 }

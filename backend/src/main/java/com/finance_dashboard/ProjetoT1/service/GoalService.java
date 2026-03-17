@@ -50,7 +50,6 @@ public class GoalService {
     }
 
     public Goal updateGoal(String id, String userId, CreateGoalRequest request) {
-
         Goal goal = getGoalById(id, userId);
 
         goal.setName(request.getName());
@@ -59,6 +58,12 @@ public class GoalService {
         goal.setDeadline(request.getDeadline());
         goal.setType(request.getType());
         goal.setUpdatedAt(LocalDateTime.now());
+
+        if (goal.getCurrentAmount().compareTo(goal.getTargetAmount()) >= 0) {
+            goal.setStatus(GoalStatus.COMPLETED);
+        } else {
+            goal.setStatus(GoalStatus.ACTIVE);
+        }
 
         return goalRepository.save(goal);
     }

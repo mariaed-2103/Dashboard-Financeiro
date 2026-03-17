@@ -58,7 +58,8 @@ import {
 import { Toaster, toast } from "sonner";
 import { getToken, removeToken } from "@/services/auth";
 import { getUserProfile } from "@/services/api";
-import { LogOut, User, CalendarIcon, Settings2, Eye, EyeOff } from "lucide-react";
+import { LogOut, User, CalendarIcon, Settings2, Eye, EyeOff, Target } from "lucide-react";
+import Link from "next/link";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -526,6 +527,18 @@ export default function DashboardPage() {
                             />
                         </DialogContent>
                     </Dialog>
+
+                    {/* Botão Metas */}
+                    <Button
+                        variant="ghost"
+                        asChild
+                        className="cursor-pointer gap-2 text-muted-foreground hover:text-foreground hover:bg-muted"
+                    >
+                        <Link href="/goals">
+                            <Target className="size-4" />
+                            Metas
+                        </Link>
+                    </Button>
 
                     <Button
                         variant="ghost"
