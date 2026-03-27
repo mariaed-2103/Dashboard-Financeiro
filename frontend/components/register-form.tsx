@@ -65,7 +65,7 @@ export function RegisterForm() {
         focus:border-accent/50 focus:ring-2 focus:ring-accent/20
         transition-all duration-300
         text-sm text-foreground placeholder:text-muted-foreground
-        w-full
+        w-full rounded-xl
     `
 
     /* Componente reutilizável para label dos campos */
@@ -76,24 +76,16 @@ export function RegisterForm() {
     )
 
     /* Botão de toggle de visibilidade de senha com área de toque generosa */
-    const PasswordToggle = ({
-                                show,
-                                onToggle,
-                                label,
-                            }: {
-        show: boolean
-        onToggle: () => void
-        label: string
-    }) => (
+    const PasswordToggle = ({ show, onToggle, label }: { show: boolean, onToggle: () => void, label: string }) => (
         <button
             type="button"
             onClick={onToggle}
             className="
-                cursor-pointer absolute right-0
-                w-11 h-full
-                flex items-center justify-center
+                absolute right-0 top-0 bottom-0
+                w-11 flex items-center justify-center
                 text-muted-foreground hover:text-accent
-                transition-colors
+                transition-colors z-20 focus:outline-none
+                cursor-pointer
             "
             aria-label={label}
         >
@@ -104,22 +96,12 @@ export function RegisterForm() {
     return (
         // gap-4 no mobile, gap-5 em sm+ — evita que o form fique alto demais em 360px
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 sm:gap-5">
-
-            {/* Nome */}
+            {/* Nome e Email seguem o padrão relative + flex items-center */}
             <div className="flex flex-col gap-1.5 sm:gap-2">
-                <FieldLabel htmlFor="name">Nome</FieldLabel>
-                <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground shrink-0" />
-                    <Input
-                        id="name"
-                        type="text"
-                        placeholder="Seu nome completo"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        className={inputClasses}
-                        autoComplete="name"
-                        required
-                    />
+                <Label htmlFor="name" className="text-foreground/80 text-xs sm:text-sm">Nome</Label>
+                <div className="relative flex items-center">
+                    <User className="absolute left-3 size-4 text-muted-foreground z-10" />
+                    <Input id="name" type="text" placeholder="Seu nome completo" value={name} onChange={(e) => setName(e.target.value)} className={inputClasses} required />
                 </div>
             </div>
 
@@ -144,34 +126,27 @@ export function RegisterForm() {
 
             {/* Senha */}
             <div className="flex flex-col gap-1.5 sm:gap-2">
-                <FieldLabel htmlFor="password">Senha</FieldLabel>
-                <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground shrink-0" />
+                <Label htmlFor="password" className="text-foreground/80 text-xs sm:text-sm">Senha</Label>
+                <div className="relative flex items-center">
+                    <Lock className="absolute left-3 size-4 text-muted-foreground z-10" />
                     <Input
                         id="password"
                         type={showPassword ? "text" : "password"}
-                        // Placeholder encurtado para não cortar em 360px
                         placeholder="Ex: Clarus@2026"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         className={`${inputClasses} pr-11`}
-                        autoComplete="new-password"
                         required
-                        minLength={8}
                     />
-                    <PasswordToggle
-                        show={showPassword}
-                        onToggle={() => setShowPassword(!showPassword)}
-                        label={showPassword ? "Ocultar senha" : "Mostrar senha"}
-                    />
+                    <PasswordToggle show={showPassword} onToggle={() => setShowPassword(!showPassword)} label="Mostrar senha" />
                 </div>
             </div>
 
             {/* Confirmar Senha */}
             <div className="flex flex-col gap-1.5 sm:gap-2">
-                <FieldLabel htmlFor="confirmPassword">Confirmar senha</FieldLabel>
-                <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground shrink-0" />
+                <Label htmlFor="confirmPassword" className="text-foreground/80 text-xs sm:text-sm">Confirmar senha</Label>
+                <div className="relative flex items-center">
+                    <Lock className="absolute left-3 size-4 text-muted-foreground z-10" />
                     <Input
                         id="confirmPassword"
                         type={showConfirmPassword ? "text" : "password"}
@@ -179,15 +154,9 @@ export function RegisterForm() {
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         className={`${inputClasses} pr-11`}
-                        autoComplete="new-password"
                         required
-                        minLength={8}
                     />
-                    <PasswordToggle
-                        show={showConfirmPassword}
-                        onToggle={() => setShowConfirmPassword(!showConfirmPassword)}
-                        label={showConfirmPassword ? "Ocultar senha" : "Mostrar senha"}
-                    />
+                    <PasswordToggle show={showConfirmPassword} onToggle={() => setShowConfirmPassword(!showConfirmPassword)} label="Mostrar senha" />
                 </div>
             </div>
 
