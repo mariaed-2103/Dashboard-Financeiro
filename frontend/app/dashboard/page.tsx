@@ -382,18 +382,21 @@ export default function DashboardPage() {
     const allUserCategories: UserCategory[] = [...globalCategories, ...customCategories];
 
     // ─── Itens de navegação (reutilizados no header desktop e no Sheet mobile) ──
-    const navItems = (closeMenu?: () => void) => (
+    // isMobile=true → omite o botão de privacidade (já fica exposto no header mobile)
+    const navItems = (closeMenu?: () => void, isMobile = false) => (
         <>
-            {/* Privacidade */}
-            <Button
-                variant="ghost"
-                onClick={() => { setIsBlurred((prev) => !prev); closeMenu?.(); }}
-                className="cursor-pointer gap-2 text-muted-foreground hover:text-foreground hover:bg-muted justify-start"
-                title={isBlurred ? "Mostrar valores" : "Ocultar valores"}
-            >
-                {isBlurred ? <EyeOff className="size-4 shrink-0" /> : <Eye className="size-4 shrink-0" />}
-                <span className="md:sr-only">{isBlurred ? "Mostrar valores" : "Ocultar valores"}</span>
-            </Button>
+            {/* Privacidade — oculto no menu mobile pois já está no header */}
+            {!isMobile && (
+                <Button
+                    variant="ghost"
+                    onClick={() => { setIsBlurred((prev) => !prev); closeMenu?.(); }}
+                    className="cursor-pointer gap-2 text-muted-foreground hover:text-foreground hover:bg-muted justify-start"
+                    title={isBlurred ? "Mostrar valores" : "Ocultar valores"}
+                >
+                    {isBlurred ? <EyeOff className="size-4 shrink-0" /> : <Eye className="size-4 shrink-0" />}
+                    <span>{isBlurred ? "Mostrar valores" : "Ocultar valores"}</span>
+                </Button>
+            )}
 
             {/* Categorias */}
             <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
@@ -501,18 +504,13 @@ export default function DashboardPage() {
                             </Button>
                         </SheetTrigger>
                         <SheetContent side="right" className="w-64 p-0 bg-card border-border/50">
-                            {/* Cabeçalho do Sheet */}
-                            <div className="flex items-center justify-between px-4 py-4 border-b border-border/50">
+                            {/* Cabeçalho do Sheet — o X de fechar é renderizado pelo próprio SheetContent */}
+                            <div className="flex items-center px-4 py-4 border-b border-border/50">
                                 <span className="font-semibold text-foreground">Menu</span>
-                                <SheetClose asChild>
-                                    <Button variant="ghost" size="icon" className="cursor-pointer text-muted-foreground">
-                                        <X className="size-4" />
-                                    </Button>
-                                </SheetClose>
                             </div>
-                            {/* Links de navegação em coluna */}
+                            {/* Links de navegação em coluna — sem o botão de privacidade */}
                             <nav className="flex flex-col gap-1 p-3">
-                                {navItems(() => setMobileMenuOpen(false))}
+                                {navItems(() => setMobileMenuOpen(false), true)}
                             </nav>
                         </SheetContent>
                     </Sheet>
