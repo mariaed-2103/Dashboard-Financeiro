@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
-import { ArrowLeft, LogOut, Loader2 } from "lucide-react"
+import { ArrowLeft, LogOut } from "lucide-react"
 
 import { ProfileAvatar } from "@/components/profile/profile-avatar"
 import { ProfileForm } from "@/components/profile/profile-form"
@@ -67,47 +67,50 @@ export default function ProfilePage() {
         <div className="min-h-svh bg-background flex flex-col">
             <Toaster position="top-right" />
 
-            {/* Header */}
-            <header className="flex items-center justify-between px-6 py-4 border-b border-border/50 bg-card">
-                <div className="flex items-center gap-3">
-                    <div className="relative size-9 flex items-center justify-center overflow-hidden">
-                        <Image src="/logo.png" alt="Logo Clarus" width={36} height={36} className="object-contain" />
+            {/* ── Header — Mobile-first ─────────────────────────────────────── */}
+            <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border/50 bg-card">
+                {/* Logo */}
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                    <div className="relative size-8 sm:size-9 shrink-0 overflow-hidden">
+                        <Image src="/logo.png" alt="Logo Clarus" fill className="object-contain" />
                     </div>
-                    <div>
-                        <h1 className="text-lg font-bold text-foreground">Clarus</h1>
-                        <p className="text-xs text-muted-foreground">Dados claros, decis&otilde;es melhores</p>
+                    <div className="min-w-0">
+                        <h1 className="text-base sm:text-lg font-bold text-foreground leading-tight">Clarus</h1>
+                        {/* Subtítulo some no mobile — libera espaço horizontal */}
+                        <p className="text-xs text-muted-foreground hidden sm:block">Dados claros, decisões melhores</p>
                     </div>
                 </div>
-                <div className="flex items-center gap-2">
+
+                {/* Ações: no mobile vira só ícone; sm+ mostra o texto também */}
+                <div className="flex items-center gap-1">
                     <Button
                         variant="ghost"
                         onClick={() => router.push("/")}
-                        className="cursor-pointer gap-2 text-muted-foreground hover:text-foreground hover:bg-muted"
+                        className="cursor-pointer gap-2 text-muted-foreground hover:text-foreground hover:bg-muted px-2 sm:px-3"
                     >
-                        <ArrowLeft className="size-4" />
-                        Voltar
+                        <ArrowLeft className="size-4 shrink-0" />
+                        <span className="hidden sm:inline">Voltar</span>
                     </Button>
                     <Button
                         variant="ghost"
                         onClick={handleLogout}
-                        className="cursor-pointer gap-2 text-muted-foreground hover:text-foreground hover:bg-muted"
+                        className="cursor-pointer gap-2 text-muted-foreground hover:text-foreground hover:bg-muted px-2 sm:px-3"
                     >
-                        <LogOut className="size-4" />
-                        Sair
+                        <LogOut className="size-4 shrink-0" />
+                        <span className="hidden sm:inline">Sair</span>
                     </Button>
                 </div>
             </header>
 
             {/* Content */}
-            <main className="flex-1 container mx-auto px-4 py-8 max-w-2xl">
-                <div className="flex flex-col gap-2 mb-8">
-                    <h2 className="text-2xl font-bold text-foreground">Meu Perfil</h2>
-                    <p className="text-muted-foreground">Gerencie suas informa&ccedil;&otilde;es pessoais e seguran&ccedil;a</p>
+            <main className="flex-1 container mx-auto px-4 py-6 sm:py-8 max-w-2xl">
+                <div className="flex flex-col gap-2 mb-6 sm:mb-8">
+                    <h2 className="text-xl sm:text-2xl font-bold text-foreground">Meu Perfil</h2>
+                    <p className="text-sm text-muted-foreground">Gerencie suas informações pessoais e segurança</p>
                 </div>
 
                 {isLoading ? (
                     <div className="flex flex-col gap-6">
-                        {/* Avatar Skeleton */}
                         <div className="bg-card border border-border/50 rounded-lg p-6">
                             <Skeleton className="h-5 w-32 mb-6 bg-muted" />
                             <div className="flex flex-col items-center gap-4">
@@ -115,7 +118,6 @@ export default function ProfilePage() {
                                 <Skeleton className="h-9 w-32 bg-muted" />
                             </div>
                         </div>
-                        {/* Form Skeleton */}
                         <div className="bg-card border border-border/50 rounded-lg p-6">
                             <Skeleton className="h-5 w-36 mb-6 bg-muted" />
                             <div className="flex flex-col gap-4">
@@ -130,7 +132,6 @@ export default function ProfilePage() {
                                 <Skeleton className="h-10 w-40 self-end bg-muted" />
                             </div>
                         </div>
-                        {/* Password Skeleton */}
                         <div className="bg-card border border-border/50 rounded-lg p-6">
                             <Skeleton className="h-5 w-32 mb-6 bg-muted" />
                             <div className="flex flex-col gap-4">
@@ -144,30 +145,15 @@ export default function ProfilePage() {
                 ) : error ? (
                     <div className="bg-card border border-border/50 rounded-lg p-8 text-center">
                         <p className="text-muted-foreground mb-4">{error}</p>
-                        <Button
-                            onClick={loadProfile}
-                            className="cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90"
-                        >
+                        <Button onClick={loadProfile} className="cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90">
                             Tentar novamente
                         </Button>
                     </div>
                 ) : user ? (
                     <div className="flex flex-col gap-6">
-                        <ProfileAvatar
-                            name={user.name}
-                            profileImageUrl={user.profileImageUrl}
-                            onAvatarUpdated={loadProfile}
-                        />
-
-                        <ProfileForm
-                            name={user.name}
-                            email={user.email}
-                            onNameUpdated={loadProfile}
-                        />
-
+                        <ProfileAvatar name={user.name} profileImageUrl={user.profileImageUrl} onAvatarUpdated={loadProfile} />
+                        <ProfileForm name={user.name} email={user.email} onNameUpdated={loadProfile} />
                         <PasswordForm />
-
-                        {/* Logout Button */}
                         <div className="pt-4 border-t border-border/50">
                             <Button
                                 variant="outline"
@@ -182,10 +168,9 @@ export default function ProfilePage() {
                 ) : null}
             </main>
 
-            {/* Footer */}
             <footer className="border-t border-border/50 bg-card mt-auto">
                 <div className="container mx-auto px-4 py-4 text-center text-sm text-muted-foreground">
-                    Clarus &copy; 2026 &mdash; Dados claros, decis&otilde;es melhores
+                    Clarus © 2026 — Dados claros, decisões melhores
                 </div>
             </footer>
         </div>

@@ -39,28 +39,20 @@ import type { Goal, CreateGoalRequest, AddProgressRequest } from "@/types/goal";
 export default function GoalsPage() {
     const router = useRouter();
 
-    // Auth state
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-
-    // Goals state
     const [goals, setGoals] = useState<Goal[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Modal states
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isAddProgressModalOpen, setIsAddProgressModalOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-    // Selected goal for modals
     const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
-
-    // Submitting states
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
-    // Check authentication
     useEffect(() => {
         if (!getToken()) {
             router.replace("/login");
@@ -69,11 +61,9 @@ export default function GoalsPage() {
         }
     }, [router]);
 
-    // Load goals
     const loadGoals = useCallback(async () => {
         setIsLoading(true);
         setError(null);
-
         try {
             const data = await getGoals();
             setGoals(data);
@@ -92,12 +82,9 @@ export default function GoalsPage() {
     }, [router]);
 
     useEffect(() => {
-        if (!isCheckingAuth) {
-            loadGoals();
-        }
+        if (!isCheckingAuth) loadGoals();
     }, [isCheckingAuth, loadGoals]);
 
-    // Handlers
     const handleCreateGoal = async (data: CreateGoalRequest) => {
         setIsSubmitting(true);
         try {
@@ -161,25 +148,10 @@ export default function GoalsPage() {
         }
     };
 
-    const openEditModal = (goal: Goal) => {
-        setSelectedGoal(goal);
-        setIsEditModalOpen(true);
-    };
-
-    const openAddProgressModal = (goal: Goal) => {
-        setSelectedGoal(goal);
-        setIsAddProgressModalOpen(true);
-    };
-
-    const openDeleteDialog = (goal: Goal) => {
-        setSelectedGoal(goal);
-        setIsDeleteDialogOpen(true);
-    };
-
-    const handleLogout = () => {
-        removeToken();
-        router.push("/login");
-    };
+    const openEditModal = (goal: Goal) => { setSelectedGoal(goal); setIsEditModalOpen(true); };
+    const openAddProgressModal = (goal: Goal) => { setSelectedGoal(goal); setIsAddProgressModalOpen(true); };
+    const openDeleteDialog = (goal: Goal) => { setSelectedGoal(goal); setIsDeleteDialogOpen(true); };
+    const handleLogout = () => { removeToken(); router.push("/login"); };
 
     if (isCheckingAuth) return null;
 
@@ -187,75 +159,65 @@ export default function GoalsPage() {
         <div className="min-h-svh bg-background flex flex-col">
             <Toaster position="top-right" />
 
-            {/* Header */}
-            <header className="flex items-center justify-between px-6 py-4 border-b border-border/50 bg-card">
-                <div className="flex items-center gap-3">
-                    <div className="relative w-9 h-9">
-                        <Image
-                            src="/logo.png"
-                            alt="Logo Clarus"
-                            fill
-                            className="object-contain"
-                            priority
-                        />
+            {/* ── Header — Mobile-first ─────────────────────────────────────── */}
+            <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border/50 bg-card">
+                {/* Logo */}
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                    <div className="relative w-8 h-8 sm:w-9 sm:h-9 shrink-0">
+                        <Image src="/logo.png" alt="Logo Clarus" fill className="object-contain" priority />
                     </div>
-                    <div>
-                        <h1 className="text-lg font-bold text-foreground">Clarus</h1>
-                        <p className="text-xs text-muted-foreground">
-                            {"Dados claros, decisões melhores"}
-                        </p>
+                    <div className="min-w-0">
+                        <h1 className="text-base sm:text-lg font-bold text-foreground leading-tight">Clarus</h1>
+                        {/* Subtítulo some no mobile para não empurrar os botões para fora */}
+                        <p className="text-xs text-muted-foreground hidden sm:block">Dados claros, decisões melhores</p>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                {/* Ações: no mobile vira só ícone; sm+ mostra o texto também */}
+                <div className="flex items-center gap-1">
                     <Button
                         variant="ghost"
                         asChild
-                        className="gap-2 text-muted-foreground hover:text-foreground hover:bg-muted"
+                        className="gap-2 text-muted-foreground hover:text-foreground hover:bg-muted px-2 sm:px-3"
                     >
                         <Link href="/dashboard">
-                            <ArrowLeft className="size-4" />
-                            Dashboard
+                            <ArrowLeft className="size-4 shrink-0" />
+                            <span className="hidden sm:inline">Dashboard</span>
                         </Link>
                     </Button>
                     <Button
                         variant="ghost"
                         onClick={() => router.push("/profile")}
-                        className="cursor-pointer gap-2 text-muted-foreground hover:text-foreground hover:bg-muted"
+                        className="cursor-pointer gap-2 text-muted-foreground hover:text-foreground hover:bg-muted px-2 sm:px-3"
                     >
-                        <User className="size-4" />
-                        Perfil
+                        <User className="size-4 shrink-0" />
+                        <span className="hidden sm:inline">Perfil</span>
                     </Button>
                     <Button
                         variant="ghost"
                         onClick={handleLogout}
-                        className="cursor-pointer gap-2 text-muted-foreground hover:text-foreground hover:bg-muted"
+                        className="cursor-pointer gap-2 text-muted-foreground hover:text-foreground hover:bg-muted px-2 sm:px-3"
                     >
-                        <LogOut className="size-4" />
-                        Sair
+                        <LogOut className="size-4 shrink-0" />
+                        <span className="hidden sm:inline">Sair</span>
                     </Button>
                 </div>
             </header>
 
             {/* Main Content */}
-            <main className="flex-1 container mx-auto px-4 py-8 flex flex-col gap-6">
+            <main className="flex-1 container mx-auto px-3 sm:px-4 py-6 sm:py-8 flex flex-col gap-6">
                 {/* Page Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div className="flex items-center gap-3">
-                        <div className="flex items-center justify-center size-12 rounded-xl bg-primary/10">
-                            <Target className="size-6 text-primary" />
+                        <div className="flex items-center justify-center size-10 sm:size-12 rounded-xl bg-primary/10 shrink-0">
+                            <Target className="size-5 sm:size-6 text-primary" />
                         </div>
                         <div>
-                            <h2 className="text-2xl font-bold text-foreground">
-                                Metas Financeiras
-                            </h2>
-                            <p className="text-muted-foreground">
-                                Acompanhe seu progresso e alcance seus objetivos
-                            </p>
+                            <h2 className="text-xl sm:text-2xl font-bold text-foreground">Metas Financeiras</h2>
+                            <p className="text-sm text-muted-foreground">Acompanhe seu progresso e alcance seus objetivos</p>
                         </div>
                     </div>
-
-                    <Button onClick={() => setIsCreateModalOpen(true)} className="cursor-pointer gap-2">
+                    <Button onClick={() => setIsCreateModalOpen(true)} className="cursor-pointer gap-2 w-full sm:w-auto">
                         <Plus className="size-4" />
                         Criar nova meta
                     </Button>
@@ -280,15 +242,11 @@ export default function GoalsPage() {
                             </EmptyMedia>
                             <EmptyTitle>Nenhuma meta cadastrada</EmptyTitle>
                             <EmptyDescription>
-                                Crie sua primeira meta financeira para começar a acompanhar seu
-                                progresso.
+                                Crie sua primeira meta financeira para começar a acompanhar seu progresso.
                             </EmptyDescription>
                         </EmptyHeader>
                         <EmptyContent>
-                            <Button
-                                onClick={() => setIsCreateModalOpen(true)}
-                                className="cursor-pointer gap-2"
-                            >
+                            <Button onClick={() => setIsCreateModalOpen(true)} className="cursor-pointer gap-2">
                                 <Plus className="size-4" />
                                 Criar primeira meta
                             </Button>
@@ -309,7 +267,6 @@ export default function GoalsPage() {
                 )}
             </main>
 
-            {/* Footer */}
             <footer className="border-t border-border/50 bg-card mt-auto">
                 <div className="container mx-auto px-4 py-4 text-center text-sm text-muted-foreground">
                     {"Clarus © 2026 — Dados claros, decisões melhores"}
@@ -323,36 +280,24 @@ export default function GoalsPage() {
                 onSubmit={handleCreateGoal}
                 isSubmitting={isSubmitting}
             />
-
             <EditGoalModal
                 goal={selectedGoal}
                 isOpen={isEditModalOpen}
-                onClose={() => {
-                    setIsEditModalOpen(false);
-                    setSelectedGoal(null);
-                }}
+                onClose={() => { setIsEditModalOpen(false); setSelectedGoal(null); }}
                 onSubmit={handleEditGoal}
                 isSubmitting={isSubmitting}
             />
-
             <AddProgressModal
                 goal={selectedGoal}
                 isOpen={isAddProgressModalOpen}
-                onClose={() => {
-                    setIsAddProgressModalOpen(false);
-                    setSelectedGoal(null);
-                }}
+                onClose={() => { setIsAddProgressModalOpen(false); setSelectedGoal(null); }}
                 onSubmit={handleAddProgress}
                 isSubmitting={isSubmitting}
             />
-
             <DeleteGoalDialog
                 goal={selectedGoal}
                 isOpen={isDeleteDialogOpen}
-                onClose={() => {
-                    setIsDeleteDialogOpen(false);
-                    setSelectedGoal(null);
-                }}
+                onClose={() => { setIsDeleteDialogOpen(false); setSelectedGoal(null); }}
                 onConfirm={handleDeleteGoal}
                 isDeleting={isDeleting}
             />
