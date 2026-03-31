@@ -113,35 +113,34 @@ function Calendar({
                       ...props
                   }: React.ComponentProps<typeof DayPicker> & {
     buttonVariant?: React.ComponentProps<typeof Button>['variant']
-    /**
-     * "transaction" → max date = today
-     * "goal"        → max date = today + 20 years
-     * "default"     → no restriction
-     */
     calendarMode?: CalendarMode
 }) {
     const defaultClassNames = getDefaultClassNames()
     const today = new Date()
 
+    // ── Configuração de Limites ─────────────────────────────────────────────
+    // Definimos 2026 como base conforme solicitado
+    const minYear = 2026
+    const maxYear = 2026 + 20 // 2046
+
     // ── Internal month state ──────────────────────────────────────────────────
-    const [displayedMonth, setDisplayedMonth] = React.useState<Date>(
-        (props.defaultMonth as Date | undefined) ??
-        (props.month as Date | undefined) ??
-        today,
-    )
+    const [displayedMonth, setDisplayedMonth] = React.useState<Date>(() => {
+        // Se houver uma data inicial, usamos ela,
+        // caso contrário, começamos em Janeiro de 2026 (o novo mínimo)
+        const initial = (props.defaultMonth as Date | undefined) ?? (props.month as Date | undefined)
+        if (initial && initial.getFullYear() >= minYear) return initial
+        return new Date(minYear, 0, 1)
+    })
+
     const [yearPickerOpen, setYearPickerOpen] = React.useState(false)
 
-    // ── Date bounds ───────────────────────────────────────────────────────────
-    const minYear = 2000
-    const maxYear =
-        calendarMode === 'goal' ? today.getFullYear() + 20 : today.getFullYear()
-
+    // ── Date bounds para o DayPicker ──────────────────────────────────────────
+    // Se o modo for 'transaction', o limite superior é hoje (mas note que se hoje for < 2026, isso pode conflitar)
+    // Se for 'goal', o limite é o maxYear (2046)
     const toDateBound =
         calendarMode === 'transaction'
             ? today
-            : calendarMode === 'goal'
-                ? new Date(today.getFullYear() + 20, 11, 31)
-                : undefined
+            : new Date(maxYear, 11, 31)
 
     // ── Sync controlled `month` prop ──────────────────────────────────────────
     React.useEffect(() => {
@@ -170,7 +169,6 @@ function Calendar({
         captionLabel.charAt(0).toUpperCase() + captionLabel.slice(1)
 
     return (
-        // Outer wrapper: relative so the year-picker overlay fills it
         <div className="relative w-fit">
             <DayPicker
                 showOutsideDays={showOutsideDays}
