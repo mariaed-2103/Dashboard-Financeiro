@@ -19,36 +19,27 @@ interface Props {
 }
 
 const EXPENSE_COLORS = [
-    "#ef4444",
-    "#f97316",
-    "#eab308",
-    "#ec4899",
-    "#a855f7",
-    "#f43f5e",
-    "#d946ef",
-    "#fb923c",
-    "#fbbf24",
+    "#ef4444", // red-500
+    "#fe5000", // brand orange
+    "#c026d3", // brand pink
+    "#9333ea", // brand purple
+    "#f43f5e", // rose-500
+    "#d946ef", // fuchsia-500
+    "#fb923c", // orange-400
 ]
 
 const INCOME_COLORS = [
-    "#22c55e",
-    "#10b981",
-    "#14b8a6",
-    "#06b6d4",
-    "#55D9C1",
-    "#34d399",
-    "#2dd4bf",
-    "#67e8f9",
-    "#a7f3d0",
+    "#22d3a0", // success green
+    "#10b981", // emerald-500
+    "#14b8a6", // teal-500
+    "#06b6d4", // cyan-500
+    "#3b82f6", // blue-500
+    "#6366f1", // indigo-500
+    "#8b5cf6", // violet-500
 ]
 
 function formatCurrency(value: number) {
     return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
-}
-
-// Trunca nomes longos para exibição nos labels do gráfico
-function truncateName(name: string, maxLength = 14): string {
-    return name.length > maxLength ? `${name.substring(0, maxLength - 1)}…` : name
 }
 
 interface LegendEntry {
@@ -56,19 +47,17 @@ interface LegendEntry {
     color: string
 }
 
-// Legend customizada com scroll se houver muitos itens
 function CustomLegend({ payload }: { payload?: LegendEntry[] }) {
     if (!payload) return null
     return (
-        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 pt-2 max-h-20 overflow-y-auto">
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 pt-2 max-h-20 overflow-y-auto">
             {payload.map((entry, index) => (
                 <div key={index} className="flex items-center gap-1.5 min-w-0">
                     <span
-                        className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
-                        style={{ backgroundColor: entry.color }}
+                        className="inline-block h-2.5 w-2.5 shrink-0 rounded-full shadow-[0_0_8px_currentColor]"
+                        style={{ backgroundColor: entry.color, color: entry.color }}
                     />
-                    {/* Mostra o nome completo na legend — só trunca no label do gráfico */}
-                    <span className="text-xs text-muted-foreground truncate max-w-[120px]" title={entry.value}>
+                    <span className="text-xs text-muted-foreground/80 font-medium truncate max-w-[120px]" title={entry.value}>
                         {entry.value}
                     </span>
                 </div>
@@ -77,23 +66,13 @@ function CustomLegend({ payload }: { payload?: LegendEntry[] }) {
     )
 }
 
-// Tooltip customizado que mostra o nome completo
 function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<{ name: string; value: number }> }) {
     if (!active || !payload?.length) return null
     const { name, value } = payload[0]
     return (
-        <div
-            style={{
-                backgroundColor: "#ffffff",
-                border: "1px solid #e2e8f0",
-                borderRadius: "10px",
-                color: "#1a2a38",
-                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-                padding: "10px 14px",
-            }}
-        >
-            <p style={{ fontWeight: 600, marginBottom: 4, color: "#0f172a" }}>{name}</p>
-            <p style={{ color: "#334155", fontWeight: 500 }}>{formatCurrency(value)}</p>
+        <div className="bg-[#0f0f1a]/95 backdrop-blur-xl border border-[rgba(147,51,234,0.2)] rounded-xl shadow-[0_16px_48px_rgba(8,8,15,0.9)] p-3">
+            <p className="text-foreground font-bold mb-1">{name}</p>
+            <p className="text-[#c4b5fd] font-semibold">{formatCurrency(value)}</p>
         </div>
     )
 }
@@ -111,12 +90,12 @@ export function CategoryPieChart({ data, type, userCategories }: Props) {
 
     if (chartData.length === 0) {
         return (
-            <Card className="border-border/50 flex-1">
+            <Card className="border-[rgba(147,51,234,0.12)] bg-[#0f0f1a] flex-1">
                 <CardHeader className="pb-2">
                     <CardTitle className="text-base text-foreground">{title}</CardTitle>
                 </CardHeader>
                 <CardContent className="h-[300px] flex items-center justify-center">
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-muted-foreground/60">
                         {type === "expense"
                             ? "Nenhuma despesa neste período."
                             : "Nenhuma receita neste período."}
@@ -127,12 +106,13 @@ export function CategoryPieChart({ data, type, userCategories }: Props) {
     }
 
     const legendPayload = chartData.map((entry, index) => ({
-        value: entry.name, // nome completo na legend
+        value: entry.name,
         color: colors[index % colors.length],
     }))
 
     return (
-        <Card className="border-border/50 flex-1">
+        <Card className="border-[rgba(147,51,234,0.12)] bg-[#0f0f1a] flex-1 relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#9333ea] to-transparent opacity-30" />
             <CardHeader className="pb-2">
                 <CardTitle className="text-base text-foreground">{title}</CardTitle>
             </CardHeader>
@@ -147,16 +127,16 @@ export function CategoryPieChart({ data, type, userCategories }: Props) {
                             cy="45%"
                             innerRadius={50}
                             outerRadius={80}
-                            paddingAngle={2}
-                            // Label mostra só a % — nome completo fica no tooltip e na legend
+                            paddingAngle={3}
                             label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
                             labelLine={false}
+                            stroke="none"
                         >
                             {chartData.map((_entry, index) => (
                                 <Cell
                                     key={`cell-${index}`}
                                     fill={colors[index % colors.length]}
-                                    stroke="transparent"
+                                    style={{ filter: `drop-shadow(0px 0px 8px ${colors[index % colors.length]}60)` }}
                                 />
                             ))}
                         </Pie>

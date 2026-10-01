@@ -34,24 +34,17 @@ export function LoginForm() {
         }
     }
 
-    /*
-      Mobile-first:
-      - h-11 no mobile (mais fácil de tocar, ~44px = mínimo recomendado por HIG)
-      - sm:h-12 em telas maiores
-      - text-sm no mobile, sem mudança em sm (já é legível)
-      - rounded-xl consistente
-    */
     const inputClasses = `
         pl-11 h-11 sm:h-12
-        bg-white/[0.05] border-white/10
-        focus:border-accent/40 focus:ring-accent/10
+        bg-[rgba(147,51,234,0.06)] border-[rgba(147,51,234,0.2)]
+        hover:border-[rgba(147,51,234,0.4)]
+        focus:border-[rgba(254,80,0,0.5)] focus:ring-0 focus:bg-[rgba(147,51,234,0.1)]
         transition-all duration-300
-        text-sm text-white placeholder:text-muted-foreground/50
+        text-sm text-white placeholder:text-muted-foreground/40
         rounded-xl w-full
     `
 
     return (
-        // gap-4 no mobile, gap-5 em sm+
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 sm:gap-5">
             {/* Campo Email */}
             <div className="flex flex-col gap-1.5 sm:gap-2">
@@ -70,7 +63,6 @@ export function LoginForm() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className={inputClasses}
-                        // autoComplete melhora UX no mobile (abre teclado certo)
                         autoComplete="email"
                         inputMode="email"
                         required
@@ -98,7 +90,6 @@ export function LoginForm() {
                         autoComplete="current-password"
                         required
                     />
-                    {/* Botão de toggle: área de toque generosa no mobile */}
                     <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
@@ -106,7 +97,7 @@ export function LoginForm() {
                             cursor-pointer absolute right-0
                             w-12 h-full
                             flex items-center justify-center
-                            text-muted-foreground hover:text-accent
+                            text-muted-foreground hover:text-purple-400
                             transition-colors z-10 focus:outline-none
                         "
                         aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
@@ -129,23 +120,23 @@ export function LoginForm() {
                     "
                 >
                     <AlertCircle className="size-4 shrink-0 mt-0.5" />
-                    {/* items-start + mt-0.5 no ícone evita desalinhamento quando o texto quebra linha */}
                     <p className="font-medium leading-snug">{error}</p>
                 </motion.div>
             )}
 
-            {/* Botão submit — h-11 mobile, h-12 sm+ para área de toque adequada */}
+            {/* Botão submit */}
             <Button
                 type="submit"
                 disabled={loading}
                 className="
                     cursor-pointer
                     h-11 sm:h-12 w-full
-                    bg-gradient-to-r from-primary to-[#3a56ff]
+                    bg-gradient-to-r from-[#fe5000] via-[#c026d3] to-[#9333ea]
                     hover:opacity-90 text-white font-bold
                     rounded-xl transition-all
                     hover:scale-[1.01] active:scale-[0.98]
-                    shadow-lg shadow-primary/20
+                    shadow-[0_0_20px_rgba(254,80,0,0.3),0_4px_16px_rgba(8,8,15,0.5)]
+                    hover:shadow-[0_0_35px_rgba(254,80,0,0.5),0_0_60px_rgba(147,51,234,0.3)]
                     mt-1 sm:mt-2
                     text-sm sm:text-base
                 "
@@ -162,7 +153,7 @@ export function LoginForm() {
                 {"Ainda não tem conta? "}
                 <Link
                     href="/register"
-                    className="text-accent hover:text-accent/80 font-semibold transition-colors underline-offset-4 hover:underline"
+                    className="text-purple-400 hover:text-purple-300 font-semibold transition-colors underline-offset-4 hover:underline"
                 >
                     Cadastre-se
                 </Link>

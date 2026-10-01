@@ -21,7 +21,7 @@ import { GoalProgressBar } from "./goal-progress-bar";
 
 import type { Goal, GoalType, GoalStatus } from "@/types/goal";
 import { GOAL_TYPE_LABELS, GOAL_STATUS_LABELS } from "@/types/goal";
-import {cn} from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 interface GoalCardProps {
     goal: Goal;
@@ -37,9 +37,9 @@ const GOAL_TYPE_ICONS: Record<GoalType, React.ReactNode> = {
 };
 
 const GOAL_TYPE_COLORS: Record<GoalType, string> = {
-    SAVING: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-    PURCHASE: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-    DEBT: "bg-rose-500/10 text-rose-600 border-rose-500/20",
+    SAVING: "bg-[#22d3a0]/10 text-[#22d3a0] border-[#22d3a0]/20",
+    PURCHASE: "bg-[#fe5000]/10 text-[#fe5000] border-[#fe5000]/20",
+    DEBT: "bg-[#ef4444]/10 text-[#ef4444] border-[#ef4444]/20",
 };
 
 function formatCurrency(value: number): string {
@@ -49,12 +49,7 @@ function formatCurrency(value: number): string {
     }).format(value);
 }
 
-export function GoalCard({
-                             goal,
-                             onAddProgress,
-                             onEdit,
-                             onDelete,
-                         }: GoalCardProps) {
+export function GoalCard({ goal, onAddProgress, onEdit, onDelete }: GoalCardProps) {
     const percentage =
         goal.targetAmount > 0
             ? Math.min((goal.currentAmount / goal.targetAmount) * 100, 100)
@@ -66,19 +61,19 @@ export function GoalCard({
     const isOverdue = !isCompleted && deadlineDate < new Date();
 
     return (
-        <Card className="group relative overflow-hidden border-border/50 bg-card transition-all hover:shadow-md">
-            <CardHeader className="pb-3">
+        <div className="relative rounded-2xl overflow-hidden group border border-[rgba(147,51,234,0.15)] bg-[#0f0f1a] transition-all hover:shadow-[0_8px_40px_rgba(8,8,15,0.9),0_0_20px_rgba(147,51,234,0.07)] hover:border-[rgba(147,51,234,0.25)] hover:-translate-y-0.5">
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[rgba(254,80,0,0.8)] via-[rgba(192,38,211,0.8)] to-[rgba(147,51,234,0.8)]" />
+
+            <div className="p-6 pb-3">
                 <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3 min-w-0">
-                        <div
-                            className={`flex items-center justify-center size-10 rounded-lg border ${GOAL_TYPE_COLORS[goal.type]}`}
-                        >
+                        <div className={cn("flex items-center justify-center size-10 rounded-xl border", GOAL_TYPE_COLORS[goal.type])}>
                             {GOAL_TYPE_ICONS[goal.type]}
                         </div>
                         <div className="min-w-0 flex-1">
-                            <CardTitle className="text-base font-semibold text-foreground truncate">
+                            <h3 className="text-base font-bold text-foreground truncate">
                                 {goal.name}
-                            </CardTitle>
+                            </h3>
                             <p className="text-sm text-muted-foreground line-clamp-2 mt-0.5">
                                 {goal.description}
                             </p>
@@ -86,29 +81,24 @@ export function GoalCard({
                     </div>
                     <Badge
                         variant="outline"
-                        className={
-                            isCompleted
-                                ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
-                                : "bg-secondary text-secondary-foreground"
-                        }
+                        className={isCompleted ? "bg-[#22d3a0]/10 text-[#22d3a0] border-[#22d3a0]/20" : "bg-[rgba(147,51,234,0.1)] text-[#c4b5fd] border-[rgba(147,51,234,0.2)]"}
                     >
                         {GOAL_STATUS_LABELS[goal.status]}
                     </Badge>
                 </div>
-            </CardHeader>
+            </div>
 
-            <CardContent className="space-y-4">
+            <div className="px-6 pb-6 space-y-4">
                 {/* Valores */}
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Banknote className="size-4" />
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground/80 font-medium tracking-wide">
+                            <Banknote className="size-4 text-[#c4b5fd]" />
                             <span>Progresso</span>
                         </div>
-                        <span className="text-sm font-medium text-foreground">
-              {formatCurrency(goal.currentAmount)} /{" "}
-                            {formatCurrency(goal.targetAmount)}
-            </span>
+                        <span className="text-sm font-bold text-foreground">
+                            <span className="text-[#c084fc]">{formatCurrency(goal.currentAmount)}</span> / {formatCurrency(goal.targetAmount)}
+                        </span>
                     </div>
 
                     <GoalProgressBar
@@ -116,33 +106,29 @@ export function GoalCard({
                         targetAmount={goal.targetAmount}
                     />
 
-                    <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">
-              {percentage.toFixed(1)}% concluído
-            </span>
+                    <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider">
+                        <span className="text-muted-foreground/60">
+                            {percentage.toFixed(1)}% concluído
+                        </span>
                         {!isCompleted && (
-                            <span className="text-muted-foreground">
-                Faltam {formatCurrency(remainingAmount)}
-              </span>
+                            <span className="text-[#fe5000]/80">
+                                Faltam {formatCurrency(remainingAmount)}
+                            </span>
                         )}
                     </div>
                 </div>
 
                 {/* Informações adicionais */}
-                <div className="flex items-center gap-4 pt-2 border-t border-border/50">
-                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                        <Target className="size-4" />
+                <div className="flex items-center gap-4 pt-4 border-t border-[rgba(147,51,234,0.1)]">
+                    <div className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground/80">
+                        <Target className="size-4 text-[#c084fc]" />
                         <span>{GOAL_TYPE_LABELS[goal.type]}</span>
                     </div>
-                    <div
-                        className={`flex items-center gap-1.5 text-sm ${
-                            isOverdue ? "text-destructive" : "text-muted-foreground"
-                        }`}
-                    >
-                        <CalendarClock className="size-4" />
+                    <div className={cn("flex items-center gap-1.5 text-sm font-medium", isOverdue ? "text-[#ef4444]" : "text-muted-foreground/80")}>
+                        <CalendarClock className={cn("size-4", isOverdue ? "text-[#ef4444]" : "text-[#fe5000]")} />
                         <span>
-              {format(deadlineDate, "dd/MM/yyyy", { locale: ptBR })}
-            </span>
+                            {format(deadlineDate, "dd/MM/yyyy", { locale: ptBR })}
+                        </span>
                     </div>
                 </div>
 
@@ -152,14 +138,10 @@ export function GoalCard({
                         <Button
                             size="sm"
                             onClick={() => onAddProgress(goal)}
-                            className={cn(
-                                "flex-1 gap-1.5 transition-all duration-200",
-                                "bg-primary hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20 active:scale-95",
-                                "cursor-pointer"
-                            )}
+                            className="flex-1 gap-1.5 bg-gradient-to-r from-[#fe5000] to-[#c026d3] hover:opacity-90 shadow-[0_0_15px_rgba(254,80,0,0.3)] hover:shadow-[0_0_20px_rgba(254,80,0,0.5)] border-none text-white rounded-xl"
                         >
                             <Plus className="size-4" />
-                            Adicionar progresso
+                            Adicionar
                         </Button>
                     )}
                     <Button
@@ -167,11 +149,7 @@ export function GoalCard({
                         variant="outline"
                         onClick={() => onEdit(goal)}
                         disabled={isCompleted}
-                        className={cn(
-                            "border-border/50 transition-colors duration-200",
-                            !isCompleted && "hover:bg-muted hover:text-foreground cursor-pointer active:scale-95",
-                            isCompleted && "opacity-50 cursor-not-allowed"
-                        )}
+                        className="rounded-xl border-[rgba(147,51,234,0.3)] text-[#c4b5fd] hover:bg-[rgba(147,51,234,0.1)] hover:text-white transition-colors"
                     >
                         <Pencil className="size-4" />
                         <span className="sr-only">Editar</span>
@@ -182,17 +160,13 @@ export function GoalCard({
                         variant="outline"
                         onClick={() => onDelete(goal)}
                         disabled={isCompleted}
-                        className={cn(
-                            "border-border/50 transition-all duration-200",
-                            !isCompleted && "text-destructive hover:bg-destructive hover:text-destructive-foreground cursor-pointer active:scale-95",
-                            isCompleted && "opacity-50 cursor-not-allowed"
-                        )}
+                        className="rounded-xl border-[#ef4444]/30 text-[#ef4444] hover:bg-[#ef4444]/10 hover:text-[#ef4444] transition-colors"
                     >
                         <Trash2 className="size-4" />
                         <span className="sr-only">Excluir</span>
                     </Button>
                 </div>
-            </CardContent>
-        </Card>
+            </div>
+        </div>
     );
 }

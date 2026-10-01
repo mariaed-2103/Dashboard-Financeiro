@@ -1,5 +1,4 @@
 import * as React from 'react'
-
 import { cn } from '@/lib/utils'
 
 function Card({ className, ...props }: React.ComponentProps<'div'>) {
@@ -7,7 +6,11 @@ function Card({ className, ...props }: React.ComponentProps<'div'>) {
     <div
       data-slot="card"
       className={cn(
-        'bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm',
+        'relative flex flex-col gap-6 rounded-2xl border py-6 shadow-sm overflow-hidden',
+        'bg-[#0f0f1a] border-[rgba(147,51,234,0.12)]',
+        'shadow-[0_8px_32px_rgba(8,8,15,0.8)]',
+        'transition-all duration-300',
+        'hover:border-[rgba(147,51,234,0.25)] hover:shadow-[0_8px_40px_rgba(8,8,15,0.9),0_0_20px_rgba(147,51,234,0.07)]',
         className,
       )}
       {...props}
@@ -32,7 +35,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="card-title"
-      className={cn('leading-none font-semibold', className)}
+      className={cn('leading-none font-bold text-foreground tracking-tight', className)}
       {...props}
     />
   )
@@ -52,10 +55,7 @@ function CardAction({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="card-action"
-      className={cn(
-        'col-start-2 row-span-2 row-start-1 self-start justify-self-end',
-        className,
-      )}
+      className={cn('col-start-2 row-span-2 row-start-1 self-start justify-self-end', className)}
       {...props}
     />
   )
@@ -63,11 +63,7 @@ function CardAction({ className, ...props }: React.ComponentProps<'div'>) {
 
 function CardContent({ className, ...props }: React.ComponentProps<'div'>) {
   return (
-    <div
-      data-slot="card-content"
-      className={cn('px-6', className)}
-      {...props}
-    />
+    <div data-slot="card-content" className={cn('px-6', className)} {...props} />
   )
 }
 

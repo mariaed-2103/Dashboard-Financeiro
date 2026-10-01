@@ -11,62 +11,86 @@ function LoginContent() {
     const registered = searchParams.get("registered")
 
     return (
-        // Mobile-first: padding horizontal menor em telas pequenas, aumenta em md+
         <div className="relative min-h-screen flex items-center justify-center px-4 py-8 sm:px-6 sm:py-12 overflow-hidden">
             <BackgroundAnimate />
 
             <motion.main
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 28 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                // Mobile-first: ocupa largura total no mobile, limita em sm+
+                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
                 className="z-10 w-full max-w-sm sm:max-w-[420px]"
             >
-                {/*
-                  Mobile-first: padding menor em telas pequenas (p-6),
-                  aumenta em sm+ (sm:p-10). Border-radius menor no mobile.
-                */}
+                {/* Card principal */}
                 <div className="
-                    backdrop-blur-2xl bg-white/[0.03] border border-white/10
-                    p-6 sm:p-10
-                    rounded-2xl sm:rounded-[2rem]
-                    shadow-[0_32px_64px_-12px_rgba(0,0,0,0.6)]
-                    flex flex-col gap-6 sm:gap-8
+                    relative
+                    bg-[#0f0f1a]/90
+                    backdrop-blur-3xl
+                    border border-[rgba(147,51,234,0.2)]
+                    p-7 sm:p-10
+                    rounded-3xl
+                    shadow-[0_0_100px_rgba(147,51,234,0.15),0_0_60px_rgba(254,80,0,0.08),0_32px_64px_rgba(8,8,15,0.9)]
+                    flex flex-col gap-7 sm:gap-8
+                    overflow-hidden
                 ">
+                    {/* Borda gradiente animada no topo */}
+                    <div
+                        className="absolute top-0 left-0 right-0 h-[2px]"
+                        style={{
+                            background: "linear-gradient(90deg, transparent, #fe5000, #c026d3, #9333ea, transparent)",
+                        }}
+                    />
+
+                    {/* Glow interno no canto */}
+                    <div
+                        className="absolute -top-20 -right-20 size-48 rounded-full opacity-30 pointer-events-none"
+                        style={{
+                            background: "radial-gradient(circle at center, rgba(147,51,234,0.6), transparent 70%)",
+                            filter: "blur(30px)",
+                        }}
+                    />
+                    <div
+                        className="absolute -bottom-16 -left-16 size-40 rounded-full opacity-20 pointer-events-none"
+                        style={{
+                            background: "radial-gradient(circle at center, rgba(254,80,0,0.5), transparent 70%)",
+                            filter: "blur(25px)",
+                        }}
+                    />
+
                     {/* Header */}
-                    <div className="flex flex-col items-center gap-3 sm:gap-4 text-center">
+                    <div className="flex flex-col items-center gap-3 sm:gap-4 text-center relative z-10">
                         <motion.div
-                            initial={{ scale: 0.8 }}
-                            animate={{ scale: 1 }}
-                            // Mobile-first: logo menor no mobile (size-14), maior em sm+
-                            className="relative size-14 sm:size-20 mb-1 sm:mb-2"
+                            initial={{ scale: 0.6, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+                            className="relative size-16 sm:size-20 animate-float-gentle"
+                            style={{ filter: "drop-shadow(0 0 20px rgba(147,51,234,0.7))" }}
                         >
-                            <Image
-                                src="/logo.png"
-                                alt="Clarus Logo"
-                                fill
-                                className="object-contain"
-                                priority
-                            />
+                            <Image src="/logo.png" alt="Clarus Logo" fill className="object-contain" priority />
                         </motion.div>
-                        <div className="space-y-1">
-                            {/* Mobile-first: fonte menor no mobile, aumenta em sm+ */}
-                            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+
+                        <div className="space-y-1.5">
+                            <h2 className="text-gradient text-2xl sm:text-3xl font-black tracking-tight">
                                 Bem-vindo
                             </h2>
-                            <p className="text-muted-foreground text-xs sm:text-sm">
+                            <p className="text-muted-foreground/60 text-xs sm:text-sm">
                                 Acesse sua conta Clarus
                             </p>
                         </div>
                     </div>
 
                     {registered && (
-                        <div className="rounded-xl bg-accent/10 border border-accent/20 px-3 py-2.5 sm:px-4 sm:py-3 text-xs sm:text-sm text-accent text-center">
-                            Conta criada com sucesso!
-                        </div>
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="relative rounded-2xl px-4 py-3 text-xs sm:text-sm text-emerald-400 text-center z-10 border border-emerald-500/20 bg-emerald-500/8"
+                        >
+                            🎉 Conta criada com sucesso!
+                        </motion.div>
                     )}
 
-                    <LoginForm />
+                    <div className="relative z-10">
+                        <LoginForm />
+                    </div>
                 </div>
             </motion.main>
         </div>
